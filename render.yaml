@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: personnel
+    runtime: go
+    buildCommand: go mod tidy && go build -o app .
+    startCommand: ./app
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: API_KEY
+        sync: false
+      - key: DB_NAME
+        value: personnel

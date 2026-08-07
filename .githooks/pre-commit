@@ -1,0 +1,36 @@
+#!/bin/sh
+# Зупиняє коміт, якщо в нього потрапили секрети або службовий мотлох.
+# Вмикається один раз: git config core.hooksPath .githooks
+set -u
+
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$staged" ] && exit 0
+fail=0
+
+# 1. Файли, яких не має бути в репозиторії
+bad=$(printf '%s\n' "$staged" | grep -E \
+  '(^|/)(env\.sh|\.env|[^/]*\.env|[^/]*\.pem|[^/]*\.key|id_rsa|id_ed25519)$|^(cd-[^/]*|shots)/' || true)
+if [ -n "$bad" ]; then
+  echo "✖ Ці файли не можна комітити:"
+  printf '   %s\n' $bad
+  fail=1
+fi
+
+# 2. Рядок підключення з паролем усередині змін (пароль у виводі маскуємо)
+leak=$(git diff --cached -U0 -- . \
+  | grep -E '^\+.*(mongodb\+srv|mongodb|postgres|postgresql|mysql|redis|amqp)://[^:@/ ]+:[^@/ ]+@' \
+  | sed -E 's#(://[^:@]+:)[^@]+@#\1********@#g' | head -5 || true)
+if [ -n "$leak" ]; then
+  echo "✖ У змінах є рядок підключення з паролем:"
+  printf '   %s\n' "$leak"
+  fail=1
+fi
+
+if [ "$fail" -ne 0 ]; then
+  echo ""
+  echo "Коміт зупинено."
+  echo "  прибрати файл з індексу : git restore --staged <файл>"
+  echo "  хибне спрацювання       : git commit --no-verify"
+  exit 1
+fi
+exit 0

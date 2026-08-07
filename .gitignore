@@ -1,0 +1,34 @@
+# --- секрети ---
+# env.sh містить MONGODB_URI з логіном і паролем
+env.sh
+.env
+*.env
+!*.env.example
+
+# --- збірка Go ---
+/personnel
+/personnel.exe
+*.exe
+*.test
+*.out
+vendor/
+
+# --- вивантаження застосунку ---
+oblik_*.xlsx
+zvit_*.xlsx
+vydilene_*.xlsx
+
+# --- артефакти локальних перевірок ---
+# профілі headless Chrome і скриншоти
+cd-*/
+shots/
+*.log
+
+# --- ОС і редактори ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*~

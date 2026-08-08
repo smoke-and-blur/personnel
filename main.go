@@ -30,6 +30,7 @@ var (
 	posts   *mongo.Collection
 	persons *mongo.Collection
 	journal *mongo.Collection
+	imports *mongo.Collection
 )
 
 // ---------- Моделі ----------
@@ -39,6 +40,7 @@ var (
 // звіти й підсумки рахуються за кожною окремо. Порожня = «Основна».
 type Post struct {
 	ID       primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Batch    string             `bson:"batch,omitempty" json:"batch"`
 	Sheet    string             `bson:"sheet" json:"sheet"`
 	Unit     string             `bson:"unit" json:"unit"`
 	Position string             `bson:"position" json:"position"`
@@ -76,12 +78,24 @@ type Person struct {
 	Unit        string             `bson:"unit" json:"unit"`
 	Position    string             `bson:"position" json:"position"`
 	PositionTag string             `bson:"positionTag" json:"positionTag"`
+	Phone       string             `bson:"phone" json:"phone"`
 	Status      string             `bson:"status" json:"status"` // active | dismissed
 	Note        string             `bson:"note" json:"note"`
+	Batch       string             `bson:"batch,omitempty" json:"batch"`
 	Certs       []Cert             `bson:"certs" json:"certs"`
 	Absences    []Absence          `bson:"absences" json:"absences"`
 	CreatedAt   time.Time          `bson:"createdAt" json:"createdAt"`
 	UpdatedAt   time.Time          `bson:"updatedAt" json:"updatedAt"`
+}
+
+// ImportBatch — слід одного імпорту, щоб його можна було скасувати.
+type ImportBatch struct {
+	ID     primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	TS     time.Time          `bson:"ts" json:"ts"`
+	Sheets []string           `bson:"sheets" json:"sheets"`
+	Posts  int                `bson:"posts" json:"posts"`
+	Staff  int                `bson:"staff" json:"staff"`
+	Extras int                `bson:"extras" json:"extras"`
 }
 
 type LogEntry struct {
@@ -288,6 +302,7 @@ func updatePerson(w http.ResponseWriter, r *http.Request) {
 		Rank     *string `json:"rank"`
 		Unit     *string `json:"unit"`
 		Position *string `json:"position"`
+		Phone    *string `json:"phone"`
 		Note     *string `json:"note"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
@@ -322,6 +337,9 @@ func updatePerson(w http.ResponseWriter, r *http.Request) {
 	}
 	if in.Position != nil {
 		chg("посада", p.Position, strings.TrimSpace(*in.Position), "position")
+	}
+	if in.Phone != nil {
+		chg("телефон", p.Phone, strings.TrimSpace(*in.Phone), "phone")
 	}
 	if in.Note != nil {
 		chg("примітка", p.Note, *in.Note, "note")
@@ -611,15 +629,17 @@ type importRow struct {
 	Tag      string `json:"tag"`
 	Rank     string `json:"rank"`
 	PIB      string `json:"pib"`
+	Phone    string `json:"phone"`
 	Extra    bool   `json:"extra"`
 }
 
 type importResult struct {
-	Posts   int `json:"posts"`   // створено посад
-	Tagged  int `json:"tagged"`  // наявним посадам проставлено мітку
-	Staff   int `json:"staff"`   // додано штатних людей
-	Extras  int `json:"extras"`  // додано позаштатних
-	Skipped int `json:"skipped"` // пропущено рядків
+	Batch   string `json:"batch"`   // мітка партії — за нею скасовують імпорт
+	Posts   int    `json:"posts"`   // створено посад
+	Tagged  int    `json:"tagged"`  // наявним посадам проставлено мітку
+	Staff   int    `json:"staff"`   // додано штатних людей
+	Extras  int    `json:"extras"`  // додано позаштатних
+	Skipped int    `json:"skipped"` // пропущено рядків
 }
 
 func normPIB(s string) string { return strings.ToUpper(strings.Join(strings.Fields(s), " ")) }
@@ -646,6 +666,7 @@ func normalizeImportRows(in []importRow) (rows []importRow, skipped int) {
 		row.Tag = strings.TrimSpace(row.Tag)
 		row.Rank = strings.TrimSpace(row.Rank)
 		row.PIB = strings.TrimSpace(row.PIB)
+		row.Phone = strings.TrimSpace(row.Phone)
 		if row.Extra && row.PIB == "" {
 			skipped++ // позаштатний без ПІБ — порожній рядок
 			continue
@@ -692,6 +713,8 @@ func importData(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 	var res importResult
+	batch := primitive.NewObjectID()
+	res.Batch = batch.Hex()
 
 	rows, skipped := normalizeImportRows(in.Rows)
 	res.Skipped = skipped
@@ -758,7 +781,8 @@ func importData(w http.ResponseWriter, r *http.Request) {
 		}
 		for len(have) < need[k] {
 			order++
-			p := Post{Sheet: sheet, Unit: unit, Position: position, Tag: tagFor[k], Order: order}
+			p := Post{Batch: res.Batch, Sheet: sheet, Unit: unit, Position: position,
+				Tag: tagFor[k], Order: order}
 			ins, err := posts.InsertOne(ctx, p)
 			if err != nil {
 				writeErr(w, 500, err.Error())
@@ -783,7 +807,7 @@ func importData(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		p := Person{
-			PIB: row.PIB, Rank: row.Rank, Status: "active",
+			Batch: res.Batch, PIB: row.PIB, Rank: row.Rank, Phone: row.Phone, Status: "active",
 			Certs: []Cert{}, Absences: []Absence{}, CreatedAt: now, UpdatedAt: now,
 		}
 		if row.Extra {
@@ -819,8 +843,24 @@ func importData(w http.ResponseWriter, r *http.Request) {
 
 	// Один підсумковий запис замість сотні рядків на кожну людину.
 	if res.Posts+res.Tagged+res.Staff+res.Extras > 0 {
+		seen := map[string]bool{}
+		sheets := []string{}
+		for _, row := range rows {
+			if !row.Extra && !seen[row.Sheet] {
+				seen[row.Sheet] = true
+				sheets = append(sheets, row.Sheet)
+			}
+		}
+		if _, err := imports.InsertOne(ctx, ImportBatch{
+			ID: batch, TS: time.Now().UTC(), Sheets: sheets,
+			Posts: res.Posts, Staff: res.Staff, Extras: res.Extras,
+		}); err != nil {
+			log.Printf("import batch: %v", err)
+		}
 		addLog(ctx, "", "—", "Імпорт", fmt.Sprintf("посад: %d, штатних: %d, позаштатних: %d, пропущено: %d",
 			res.Posts, res.Staff, res.Extras, res.Skipped))
+	} else {
+		res.Batch = ""
 	}
 	writeJSON(w, 200, res)
 }
@@ -853,6 +893,50 @@ func renameSheet(w http.ResponseWriter, r *http.Request) {
 	addLog(r.Context(), "", "—", "Штатка",
 		fmt.Sprintf("перейменовано «%s» → «%s», посад: %d", dash(in.From), in.To, res.ModifiedCount))
 	writeJSON(w, 200, map[string]int64{"posts": res.ModifiedCount})
+}
+
+func listImports(w http.ResponseWriter, r *http.Request) {
+	cur, err := imports.Find(r.Context(), bson.M{},
+		options.Find().SetSort(bson.D{{Key: "ts", Value: -1}}).SetLimit(10))
+	if err != nil {
+		writeErr(w, 500, err.Error())
+		return
+	}
+	out := []ImportBatch{}
+	if err := cur.All(r.Context(), &out); err != nil {
+		writeErr(w, 500, err.Error())
+		return
+	}
+	writeJSON(w, 200, out)
+}
+
+// Скасування імпорту: видаляє рівно те, що ним створено. Людей, яких потім
+// перемістили чи змінили, це теж прибирає — вони зʼявились цим імпортом.
+func undoImport(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("batch")
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		writeErr(w, 400, "некоректна мітка імпорту")
+		return
+	}
+	ctx := r.Context()
+	dp, err := persons.DeleteMany(ctx, bson.M{"batch": id})
+	if err != nil {
+		writeErr(w, 500, err.Error())
+		return
+	}
+	dpo, err := posts.DeleteMany(ctx, bson.M{"batch": id})
+	if err != nil {
+		writeErr(w, 500, err.Error())
+		return
+	}
+	if _, err := imports.DeleteOne(ctx, bson.M{"_id": oid}); err != nil {
+		writeErr(w, 500, err.Error())
+		return
+	}
+	addLog(ctx, "", "—", "Скасовано імпорт",
+		fmt.Sprintf("посад: %d, людей: %d", dpo.DeletedCount, dp.DeletedCount))
+	writeJSON(w, 200, map[string]int64{"posts": dpo.DeletedCount, "persons": dp.DeletedCount})
 }
 
 // ---------- Скидання ----------
@@ -912,6 +996,9 @@ func resetData(w http.ResponseWriter, r *http.Request) {
 			out["detached"] = u.ModifiedCount
 			parts = append(parts, fmt.Sprintf("у позаштат: %d", u.ModifiedCount))
 		}
+	}
+	if in.Posts || in.Persons {
+		_, _ = imports.DeleteMany(ctx, bson.M{}) // сліди вказували б на видалене
 	}
 	if in.Journal {
 		d, err := journal.DeleteMany(ctx, bson.M{})
@@ -1047,6 +1134,7 @@ func main() {
 	posts = db.Collection("posts")
 	persons = db.Collection("persons")
 	journal = db.Collection("journal")
+	imports = db.Collection("imports")
 
 	mux := http.NewServeMux()
 	api := http.NewServeMux()
@@ -1054,6 +1142,8 @@ func main() {
 	api.HandleFunc("DELETE /api/posts/{id}", deletePost)
 	api.HandleFunc("POST /api/import", importData)
 	api.HandleFunc("POST /api/reset", resetData)
+	api.HandleFunc("GET /api/imports", listImports)
+	api.HandleFunc("DELETE /api/imports/{batch}", undoImport)
 	api.HandleFunc("POST /api/sheets/rename", renameSheet)
 	api.HandleFunc("GET /api/persons", listPersons)
 	api.HandleFunc("POST /api/persons", createPerson)

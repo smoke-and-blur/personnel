@@ -825,6 +825,36 @@ func importData(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, res)
 }
 
+// Перейменування штатки: міняє поле sheet в усіх її посадах.
+func renameSheet(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		From string `json:"from"`
+		To   string `json:"to"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+		writeErr(w, 400, "некоректний JSON")
+		return
+	}
+	in.From, in.To = strings.TrimSpace(in.From), strings.TrimSpace(in.To)
+	if in.To == "" {
+		writeErr(w, 400, "порожня назва штатки")
+		return
+	}
+	if in.From == in.To {
+		writeJSON(w, 200, map[string]int64{"posts": 0})
+		return
+	}
+	res, err := posts.UpdateMany(r.Context(), bson.M{"sheet": in.From},
+		bson.M{"$set": bson.M{"sheet": in.To}})
+	if err != nil {
+		writeErr(w, 500, err.Error())
+		return
+	}
+	addLog(r.Context(), "", "—", "Штатка",
+		fmt.Sprintf("перейменовано «%s» → «%s», посад: %d", dash(in.From), in.To, res.ModifiedCount))
+	writeJSON(w, 200, map[string]int64{"posts": res.ModifiedCount})
+}
+
 // ---------- Скидання ----------
 
 const resetWord = "СКИНУТИ"
@@ -1024,6 +1054,7 @@ func main() {
 	api.HandleFunc("DELETE /api/posts/{id}", deletePost)
 	api.HandleFunc("POST /api/import", importData)
 	api.HandleFunc("POST /api/reset", resetData)
+	api.HandleFunc("POST /api/sheets/rename", renameSheet)
 	api.HandleFunc("GET /api/persons", listPersons)
 	api.HandleFunc("POST /api/persons", createPerson)
 	api.HandleFunc("PUT /api/persons/{id}", updatePerson)

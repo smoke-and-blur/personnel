@@ -15,118 +15,145 @@
   --dir:hsl(var(--dh) 52% 62%);
   --dir-bg:hsl(var(--dh) 30% 15%);
   --dir-line:hsl(var(--dh) 30% 26%);
-  --hh:53px; --r:6px;
+  --hh:40px; --r:5px; --cx:9px;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--txt);
-  font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  font:13px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
 .mono{font-family:ui-monospace,"Cascadia Mono","JetBrains Mono",Consolas,monospace}
 .dim{color:var(--dim)} .small{font-size:12px} .grow{flex:1}
 .num{font-variant-numeric:tabular-nums}
-svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;
+svg.i{width:15px;height:15px;flex:none;stroke:currentColor;fill:none;
   stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 svg.i.fill{fill:currentColor;stroke:none}
 
 /* ---------- шапка ---------- */
-header{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:16px;
-  height:var(--hh);padding:0 16px;background:var(--panel);border-bottom:1px solid var(--line)}
-.brand{font-size:13px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;white-space:nowrap}
-.brand b{color:var(--gold)}
-.tabs{display:flex;gap:2px;margin-left:auto}
-.tabs button{display:flex;align-items:center;gap:7px;background:none;border:0;color:var(--dim);
-  padding:7px 13px;border-radius:var(--r);cursor:pointer;font:inherit}
+header{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;
+  height:var(--hh);padding:0 12px;background:var(--panel);border-bottom:1px solid var(--line)}
+header>*{flex:none}
+header .grow{flex:1 1 auto;min-width:0}
+header #fSheet{max-width:230px}
+.tabs{display:flex;align-items:center;gap:2px}
+.tabs button{background:none;border:0;color:var(--dim);padding:0 10px}
 .tabs button:hover{color:var(--txt);background:var(--panel2)}
 .tabs button.on{color:var(--txt);background:var(--panel2)}
+.tabs .n:empty{display:none}
 .tabs .n{font-size:11px;color:var(--faint);padding:1px 6px;border-radius:9px;background:var(--sink)}
 .tabs button.on .n{color:var(--txt)}
 
 /* ---------- елементи ---------- */
 input,select,textarea{background:var(--panel2);border:1px solid var(--line);color:var(--txt);
-  padding:6px 9px;border-radius:var(--r);font:inherit}
+  padding:4px 7px;border-radius:var(--r);font:inherit}
 textarea{width:100%;resize:vertical;font-family:ui-monospace,Consolas,monospace;font-size:12px}
 input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--edge);outline-offset:1px}
-.btn{display:inline-flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line);
-  color:var(--txt);padding:6px 12px;border-radius:var(--r);cursor:pointer;font:inherit;white-space:nowrap}
+/* одна висота, один радіус, одна логіка наведення — для всіх кнопок */
+.btn,.ico,.sopt,.seg button,.tabs button{height:26px;border-radius:var(--r);font:inherit;
+  font-size:12px;line-height:1;cursor:pointer;white-space:nowrap;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:0 9px}
 .btn:hover{border-color:var(--edge)}
 .btn.primary{background:var(--gold);border-color:var(--gold);color:#15171a;font-weight:600}
 .btn.danger{background:var(--danger);border-color:var(--danger);color:#15171a;font-weight:600}
+.btn.danger-ghost{color:var(--dim)}
+.btn.danger-ghost:hover{color:var(--danger);border-color:var(--danger)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
-.ico{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
-  background:none;border:0;border-radius:5px;color:var(--faint);cursor:pointer;padding:0}
+.ico{width:26px;background:none;border:0;color:var(--faint);padding:0}
 .ico:hover{color:var(--txt);background:var(--panel2)}
 .ico.red:hover{color:var(--danger)}
 label.file{cursor:pointer} label.file input{display:none}
 .seg{display:inline-flex;background:var(--sink);border:1px solid var(--line);border-radius:var(--r);padding:2px;gap:2px}
-.seg button{background:none;border:0;color:var(--dim);padding:5px 12px;border-radius:4px;
-  cursor:pointer;font:inherit;font-size:13px;white-space:nowrap}
+.seg button{background:none;border:0;color:var(--dim);padding:0 10px}
 .seg button:hover{color:var(--txt)}
 .seg button.on{background:var(--panel2);color:var(--txt)}
 .seg button.on.tinted{background:hsl(var(--h) 30% 18%);color:hsl(var(--h) 50% 72%);
   box-shadow:inset 0 0 0 1px hsl(var(--h) 30% 30%)}
 
 /* ---------- панелі ---------- */
-main{max-width:1500px;margin:0 auto;padding:14px 16px 48px}
-.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+main{max-width:1560px;margin:0 auto;padding:10px 12px 40px}
+/* панель лишається під шапкою при прокрутці, інакше кнопки «тікають» угору.
+   Три зони: дії зліва, пошук строго по центру, файли справа. */
+.bar{position:sticky;top:var(--hh);z-index:25;display:grid;align-items:center;
+  grid-template-columns:1fr minmax(180px,320px) 1fr;gap:8px;
+  margin:0 -12px 6px;padding:6px 12px;background:var(--bg)}
+.bar .search{margin:0 auto;max-width:none;width:100%}
+.bar .grp.end{justify-self:end}
 .bar .lbl{font-size:12px;color:var(--faint);text-transform:uppercase;letter-spacing:.07em}
-.search{display:flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line);
-  border-radius:var(--r);padding:0 9px;min-width:210px;flex:1;max-width:300px}
+.search{display:flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);
+  border-radius:var(--r);padding:0 8px;min-width:170px;flex:1;max-width:270px}
 .search svg{color:var(--faint)}
-.search input{background:none;border:0;padding:7px 0;width:100%}
+.search input{background:none;border:0;padding:4px 0;width:100%}
 .search input:focus{outline:none}
+.search.bad{border-color:var(--danger)}
+.sopt{background:none;border:0;color:var(--faint);font-weight:600;padding:0 5px;flex:none;height:22px}
+.sopt:hover{color:var(--txt);background:var(--panel)}
+.sopt.on{color:var(--gold)}
+#sopt{position:fixed;width:210px;padding:6px 4px}
+#sopt .chk.blk{padding:5px 8px;border-radius:4px}
+#sopt .chk.blk:hover{background:var(--panel)}
+/* кнопки-дії йдуть однією групою, а не розсипом */
+.grp{display:inline-flex;gap:4px;align-items:center}
+.grp .btn{padding:0 8px}
 
 /* підсумок — компактна табличка */
-.sum{display:flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-left:auto}
-.sum .cell{padding:5px 14px;border-left:1px solid var(--line);background:var(--panel);min-width:92px}
-.sum .cell:first-child{border-left:0}
-.sum .l{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);white-space:nowrap}
-.sum .v{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.3}
-.sum .cell.hi{background:var(--dir-bg)} .sum .cell.hi .v{color:var(--dir)}
+.sum{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 14px;margin-left:auto;
+  font-size:12px;color:var(--faint);white-space:nowrap}
+.sum .cell{display:inline-flex;align-items:baseline;gap:5px}
+.sum .l{color:var(--faint)}
+.sum .v{color:var(--txt);font-weight:600;font-variant-numeric:tabular-nums}
+.sum .cell.hi .v{color:var(--dir)}
 .sum .cell.warn .v{color:var(--warn)}
 
 /* ---------- сітка ---------- */
 .grid{display:grid;background:var(--panel);border:1px solid var(--line);align-content:start}
 .g-main{grid-template-columns:
-  minmax(105px,.85fr) 84px minmax(178px,2fr) 62px minmax(158px,1.5fr)
-  108px minmax(106px,.95fr) 52px 100px}
+  minmax(96px,.8fr) 92px minmax(158px,2fr) 64px minmax(146px,1.5fr)
+  118px minmax(96px,.9fr) 44px 88px}
 /* .sh — режим «Разом»: зліва додається злитий стовпчик «Тип підрозділу» */
 .g-main.sh{grid-template-columns:
-  minmax(154px,.7fr) minmax(100px,.8fr) 84px minmax(162px,1.9fr) 62px
-  minmax(146px,1.4fr) 108px minmax(102px,.9fr) 52px 100px}
-.g-rep{grid-template-columns:minmax(140px,2fr) repeat(7,minmax(72px,.75fr)) minmax(118px,1fr)}
-.g-rep.sh{grid-template-columns:minmax(120px,1.2fr) minmax(130px,1.6fr)
-  repeat(7,minmax(70px,.7fr)) minmax(112px,.95fr)}
+  minmax(142px,.62fr) minmax(90px,.72fr) 92px minmax(144px,1.9fr) 64px
+  minmax(134px,1.35fr) 118px minmax(90px,.85fr) 44px 88px}
+.g-rep{grid-template-columns:minmax(120px,2fr) repeat(7,minmax(62px,.7fr)) minmax(104px,1fr)}
+.g-rep.sh{grid-template-columns:minmax(104px,1.1fr) minmax(112px,1.5fr)
+  repeat(7,minmax(60px,.65fr)) minmax(98px,.9fr)}
 .c.sheetcell{flex-direction:column;align-items:flex-start;justify-content:flex-start;
-  padding:11px 10px;background:var(--bg);border-right:1px solid var(--line);
+  padding:7px var(--cx);background:var(--bg);border-right:1px solid var(--line);
   border-bottom:1px solid var(--line);font-weight:600;font-size:13px;line-height:1.25}
 .c.sheetcell .q{font-size:11px;color:var(--faint);font-weight:400;margin-top:2px}
 .g-out{grid-template-columns:minmax(120px,1fr) 62px minmax(180px,1.6fr) minmax(200px,2fr) 90px 84px}
 .g-log{grid-template-columns:150px minmax(160px,1.2fr) 130px minmax(220px,3fr)}
-.c{display:flex;align-items:center;gap:8px;padding:0 10px;min-height:40px;
+.c{display:flex;align-items:center;gap:6px;padding:0 var(--cx);min-height:29px;
   border-bottom:1px solid var(--line);overflow:hidden}
-.c.h{position:sticky;top:var(--hh);z-index:20;min-height:34px;padding:0 4px 0 6px;
+.c.h{position:sticky;top:calc(var(--hh) + var(--bh,0px));z-index:20;min-height:26px;padding:0 4px;
+  justify-content:center;text-align:center;
   background:var(--panel2);font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint)}
 .c.ctr{justify-content:center;padding:0 4px}
+.c.ctr input.cell{margin:0;width:100%;text-align:center}
 .c.end{justify-content:flex-end;padding-right:8px}
 .c.rt{justify-content:flex-end;font-variant-numeric:tabular-nums}
-.c.h.rt{padding-right:10px}
+.c.h.rt{padding-right:10px;justify-content:flex-end;text-align:right}
 .grid>.c:last-child,.grid>.row:last-child>.c{border-bottom:0}
 .row{display:contents}
 .row:hover>.c{background:var(--panel2)}
 .row.tot>.c{background:var(--sink);font-weight:600}
 
 /* кнопка-фільтр у заголовку */
-.fh{display:flex;align-items:center;gap:5px;width:100%;background:none;border:0;color:inherit;
-  font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;padding:6px;
-  border-radius:4px;overflow:hidden}
-.fh span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fh svg{width:12px;height:12px;opacity:0;flex:none;margin-left:auto}
+.fh{display:flex;align-items:center;justify-content:center;gap:3px;max-width:100%;
+  background:none;border:0;color:inherit;font:inherit;letter-spacing:inherit;
+  text-transform:inherit;cursor:pointer;padding:4px 5px;border-radius:4px;overflow:hidden}
+.fh span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:-.07em}
+.fh.on{position:relative}
+.fh.on::after{content:'';position:absolute;left:50%;bottom:1px;width:14px;margin-left:-7px;
+  height:2px;border-radius:1px;background:currentColor}
+.hn{position:absolute;right:5px;top:50%;transform:translateY(-50%);color:var(--txt);
+  font-weight:600;font-size:11px;font-variant-numeric:tabular-nums;pointer-events:auto}
+.hn.warn{color:var(--warn)}
 .fh:hover{background:var(--panel);color:var(--txt)} .fh:hover svg{opacity:.5}
 .fh.on{color:var(--dir);background:var(--dir-bg)} .fh.on svg{opacity:1}
 
 /* підрозділ — злитий стовпчик */
-.c.unit{flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:2px;
-  padding:11px 10px;background:var(--sink);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.c.unit{flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:1px;
+  padding:7px var(--cx);background:var(--sink);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
 .c.unit .u{font-weight:600;font-size:13px;line-height:1.25}
 .c.unit .q{font-size:11px;color:var(--faint)}
 .c.unit .s{font-size:11px;color:var(--dim)}
@@ -148,7 +175,7 @@ main{max-width:1500px;margin:0 auto;padding:14px 16px 48px}
 .row.sel>.c:first-child{box-shadow:inset 3px 0 0 var(--gold)}
 .grid.dragging{user-select:none;cursor:default}
 .c.unit,.c.sheetcell{cursor:pointer}
-#selbar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:70;
+#selbar{position:fixed;left:0;top:0;z-index:70;
   display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--panel2);
   border:1px solid var(--edge);border-radius:8px;box-shadow:0 14px 38px rgba(0,0,0,.55)}
 #selbar .n{font-size:13px;color:var(--dim);padding:0 6px 0 4px;white-space:nowrap}
@@ -159,23 +186,38 @@ main{max-width:1500px;margin:0 auto;padding:14px 16px 48px}
 
 .pos{min-width:0}
 .pos .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.c.pos>.t{padding-left:8px}
+.c.pos>.t{padding-left:0}
 .chip{flex:none;padding:0;background:none;border:0;color:var(--dim);
   font-size:12px;white-space:nowrap;letter-spacing:.02em}
 .chip.tag{color:hsl(var(--rh) 38% 63%);font-weight:600;font-size:11.5px;letter-spacing:.04em}
 .chip.vac{color:var(--faint);font-style:italic}
 .chip.main{color:var(--txt)}
 .chip.away{color:var(--warn)}
-input.cell{width:100%;background:none;border:1px solid transparent;padding:5px 7px;border-radius:5px;
+/* поки режим редагування вимкнено — поля лише показують, клік іде на виділення */
+.grid:not(.edit) input.cell,.grid:not(.edit) .rk select{pointer-events:none}
+.grid:not(.edit) input.cell{border-color:transparent!important;background:none!important}
+.grid:not(.edit) input.cell::placeholder{color:transparent}
+.grid.edit input.cell::placeholder{color:var(--dim)}
+.grid:not(.edit) .row.vac .l1 input.cell::placeholder{color:var(--faint)}
+.btn[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:#15171a;font-weight:600}
+input.cell{width:calc(100% + var(--cx)*2);margin:0 calc(var(--cx)*-1);background:none;
+  border:1px solid transparent;padding:3px calc(var(--cx) - 1px);border-radius:5px;
   min-width:0;text-overflow:ellipsis}
+/* у режимі редагування поле видно завжди, на будь-якому відтінку рядка */
+.grid.edit input.cell{background:rgba(255,255,255,.045);border-color:rgba(255,255,255,.14)}
+.grid.edit input.cell:hover{background:rgba(255,255,255,.075);border-color:rgba(255,255,255,.3)}
+.grid.edit input.cell:focus{background:#0f1114;border-color:var(--gold);outline:none}
+.grid.edit .rk{border:1px solid rgba(255,255,255,.14);border-radius:5px;
+  background:rgba(255,255,255,.045)}
+.grid.edit .rk:hover{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.075)}
 input.cell:hover{border-color:var(--line)}
 input.cell:focus{background:var(--bg);border-color:var(--edge);outline:none}
 input.cell.saved{border-color:var(--ok)}
 input.cell::placeholder{color:var(--faint);font-style:italic}
 
 /* звання — знак розрізнення; редагується прихованим select поверх */
-.rk{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:28px}
-.rk>svg{width:22px;height:22px;color:var(--dim)}
+.rk{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:26px}
+.rk>svg{width:25px;height:25px;color:var(--dim)}
 .rk:hover>svg{color:var(--txt)}
 .rk .raw{font-size:11px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rk select{position:absolute;inset:0;width:100%;opacity:0;cursor:pointer;padding:0;border:0}
@@ -276,19 +318,73 @@ tr.skip td{opacity:.45}
 
 @media (max-width:1000px){
   main{padding:10px 8px 40px}
-  header{gap:8px;padding:0 10px}
-  .brand{font-size:11px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .tabs button{padding:7px 9px}
+  .bar{margin:0 -8px 8px;padding:6px 8px}
+  /* шапка переноситься, а не розпихає сторінку вшир */
+  header{gap:6px 8px;padding:5px 10px;height:auto;flex-wrap:wrap}
+  header #fSheet{max-width:none;flex:1 1 130px}
+  header .grow{display:none}
+  .tabs{margin-left:auto}
+  .tabs button{padding:6px 8px}
   .tabs .lb{display:none}
-  .sum{margin-left:0;width:100%;overflow-x:auto}
+  .sum{width:100%;margin-left:0}
   .wrap{overflow-x:auto}
-  .wrap .g-main{min-width:1060px}
-  .wrap .g-main.sh{min-width:1200px}
-  .wrap .g-rep.sh{min-width:990px}
-  .wrap .g-rep{min-width:880px}
-  .wrap .g-out,.wrap .g-log{min-width:740px}
+  .wrap .g-main{min-width:960px}
+  .wrap .g-main.sh{min-width:1090px}
+  .wrap .g-rep.sh{min-width:900px}
+  .wrap .g-rep{min-width:800px}
+  .wrap .g-out,.wrap .g-log{min-width:680px}
   .acts{opacity:1}
-  .c.h{position:static}
+  .c.h{position:relative}
+}
+
+/* ---------- телефон: підрозділ + ПІБ, решту несе колір ---------- */
+@media (max-width:720px){
+  main{padding:6px 6px 32px}
+  .bar{margin:0 -6px 6px;padding:5px 6px}
+  .bar{gap:6px;margin-bottom:6px}
+  .bar .lbl{display:none}
+  .search{max-width:none;min-width:0;flex:1}
+  /* штатка й напрями — кожне своїм рядком, напрями гортаються */
+  header{padding:5px 6px}
+  header #fSheet{flex:1 1 100%;order:1}
+  header .seg{order:4;width:100%;min-width:0}
+  header .tabs{order:2} header .menu{order:3}
+  .seg{max-width:100%;overflow-x:auto;justify-content:flex-start;scrollbar-width:none}
+  .seg::-webkit-scrollbar{display:none}
+  .seg button{padding:4px 9px;font-size:12px;flex:none}
+  /* телефон — режим перегляду: редагування, додавання, файли й дії в рядках приховані */
+  .grp.desk{display:none}
+  #selbar{display:none}
+  .macts .ico{display:none}
+  .macts .exp{display:inline-flex}
+  /* підсумок одним рядком, без коробок */
+  .sum{border:0;gap:0;flex-wrap:wrap;width:100%;overflow:visible}
+  .sum .cell{border:0;background:none;padding:1px 10px 1px 0;min-width:0;display:flex;
+    align-items:baseline;gap:4px}
+  .sum .cell.hi{background:none}
+  .sum .l{font-size:11px;text-transform:none;letter-spacing:0}
+  .sum .v{font-size:12px}
+  /* таблиця вміщується в екран — без бічної прокрутки */
+  .wrap{overflow:visible}
+  .wrap .g-main,.wrap .g-main.sh{min-width:0}
+  .g-main,.g-main.sh{grid-template-columns:minmax(64px,.4fr) minmax(0,1fr) auto}
+  .g-main .detail,.g-main.sh .detail{grid-column:2/-1}
+  .c{min-height:34px;padding:0 7px}
+  .c.unit{padding:6px 7px}
+  .m2{flex-direction:column;align-items:flex-start;justify-content:center;gap:0;padding:4px 7px}
+  .m2 .l1{display:flex;align-items:center;gap:6px;width:100%;min-width:0}
+  .m2 .l1 .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+  .m2 .l1 input.cell{padding:2px 0;border:0}
+  .m2 .l2{font-size:11px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;width:100%}
+  .m2 .rk{width:auto;height:20px;flex:none}
+  .m2 .rk>svg{width:20px;height:20px}
+  .macts{display:flex;align-items:center;padding:0 2px 0 0}
+  .macts .ico{width:26px;height:26px}
+  #selbar{left:6px;right:6px;bottom:6px;transform:none;padding:6px;gap:4px;flex-wrap:wrap}
+  #selbar .btn{flex:1;justify-content:center}
+  dialog,dialog.wide{min-width:0;width:96vw}
+  dialog form{padding:12px}
 }
 </style>
 </head>
@@ -328,7 +424,11 @@ tr.skip td{opacity:.45}
 </div>
 
 <header>
-  <div class="brand">Облік <b>особового складу</b></div>
+  <div class="seg" id="dirSeg" aria-label="Штат"></div>
+  <select id="fSheet" onchange="setSheet(this.value)" aria-label="Штатка"></select>
+  <button class="btn" id="renSheet" onclick="renameSheet()" data-tip="Перейменувати штатку"
+    ><svg class="i"><use href="#i-edit"/></svg></button>
+  <span class="grow"></span>
   <nav class="tabs">
     <button id="tabC" class="on" onclick="showTab('c')">
       <svg class="i"><use href="#i-users"/></svg><span class="lb">Склад</span><span class="n num" id="nC"></span></button>
@@ -339,38 +439,36 @@ tr.skip td{opacity:.45}
     <button id="tabL" onclick="showTab('l')">
       <svg class="i"><use href="#i-log"/></svg><span class="lb">Журнал</span></button>
   </nav>
-  <div class="menu">
-    <button class="btn" onclick="toggleMenu(event)" aria-label="Дії"><svg class="i"><use href="#i-dots"/></svg></button>
-    <div class="pop" id="menuPop" hidden>
-      <button onclick="openImport()"><svg class="i"><use href="#i-up"/></svg>Імпорт таблиці…</button>
-      <button onclick="exportXlsx()"><svg class="i"><use href="#i-down"/></svg>Експорт XLSX</button>
-      <hr>
-      <button class="red" onclick="openReset()"><svg class="i"><use href="#i-trash"/></svg>Скинути дані…</button>
-      <button onclick="logout()"><svg class="i"><use href="#i-out"/></svg>Вийти</button>
-    </div>
-  </div>
+  <button class="btn danger-ghost" onclick="openReset()" data-tip="Скинути дані"
+    ><svg class="i"><use href="#i-trash"/></svg></button>
+  <button class="btn" onclick="logout()" data-tip="Вийти"
+    ><svg class="i"><use href="#i-out"/></svg></button>
 </header>
 
 <main>
-  <!-- спільний вибір штатки й напряму + підсумок -->
-  <div class="bar" id="scopeBar">
-    <span class="lbl" id="lblSheet">Штатка</span>
-    <select id="fSheet" onchange="setSheet(this.value)"></select>
-    <span class="lbl">Штат</span>
-    <div class="seg" id="dirSeg"></div>
-    <div class="sum" id="sum"></div>
-  </div>
-
   <!-- Склад: штатні + позаштатні -->
   <section id="viewC">
     <div class="bar">
+      <div class="grp desk">
+        <button class="btn" id="editBtn" onclick="toggleEdit()" aria-pressed="false"
+          data-tip="Редагування полів"><svg class="i"><use href="#i-edit"/></svg></button>
+        <button class="btn" onclick="openNewExtra()" data-tip="Додати позаштатного"
+          ><svg class="i"><use href="#i-adduser"/></svg></button>
+      </div>
       <label class="search">
         <svg class="i"><use href="#i-search"/></svg>
-        <input type="search" id="fSearch" placeholder="Пошук: ПІБ, посада, підрозділ…" oninput="renderAll()">
+        <input type="search" id="fSearch" placeholder="Пошук…" oninput="renderAll()">
+        <button class="sopt" id="soptBtn" onclick="toggleSopt(event)" data-tip="Опції пошуку">Aa</button>
       </label>
-      <button class="btn" id="fClear" onclick="clearFilters()" hidden>Скинути фільтри</button>
-      <span class="grow"></span>
-      <button class="btn" onclick="openNewExtra()"><svg class="i"><use href="#i-adduser"/></svg>Позаштатний</button>
+      <div class="grp end">
+        <button class="btn" id="fClear" onclick="clearFilters()" hidden>Скинути</button>
+        <span class="desk grp">
+          <button class="btn" onclick="openImport()" data-tip="Імпорт таблиці"
+            ><svg class="i"><use href="#i-up"/></svg></button>
+          <button class="btn" onclick="exportXlsx()" data-tip="Експорт XLSX"
+            ><svg class="i"><use href="#i-down"/></svg></button>
+        </span>
+      </div>
     </div>
     <div class="wrap"><div class="grid g-main" id="gMain"></div></div>
   </section>
@@ -409,6 +507,13 @@ tr.skip td{opacity:.45}
 </main>
 
 <div class="pop" id="fpop" hidden onclick="event.stopPropagation()"></div>
+
+<div class="pop" id="sopt" hidden onclick="event.stopPropagation()">
+  <label class="chk blk"><input type="checkbox" id="soCase" onchange="setSopt()">зберегти регістр</label>
+  <label class="chk blk"><input type="checkbox" id="soWord" onchange="setSopt()">ціле слово</label>
+  <label class="chk blk"><input type="checkbox" id="soRe" onchange="setSopt()">регулярний вираз</label>
+  <div class="small dim" style="padding:2px 8px 4px" id="soHint"></div>
+</div>
 
 <div id="selbar" hidden>
   <span class="n">Виділено <b id="selN">0</b></span>
@@ -567,16 +672,19 @@ const absName = k => (ABSENCE.find(a=>a.k===k)||{}).n || k;
    gen — генеральська). Малюнок схематичний; щоб підігнати під реальні погони,
    правити треба лише цю таблицю. */
 const RANKS = [
-  {n:'солдат',                   ins:{}},
-  {n:'старший солдат',           ins:{bar:1}},
-  {n:'молодший сержант',         ins:{chev:1}},
-  {n:'сержант',                  ins:{chev:2}},
-  {n:'старший сержант',          ins:{chev:3}},
-  {n:'головний сержант',         ins:{chev:4}},
-  {n:'штаб-сержант',             ins:{chev:1, bar:1}},
-  {n:'майстер-сержант',          ins:{chev:2, bar:1}},
-  {n:'старший майстер-сержант',  ins:{chev:3, bar:1}},
-  {n:'головний майстер-сержант', ins:{chev:4, bar:1}},
+  // Рядовий і сержантський склад — за чинною схемою знаків розрізнення ЗСУ:
+  // кути 1…5 (старший солдат → головний сержант), у групі OR-9 — кути над дугою.
+  {n:'рекрут',                   ins:{}},                        // OR-1, знаків не передбачено
+  {n:'солдат',                   ins:{}},                  // OR-2
+  {n:'старший солдат',           ins:{chev:1}},          // OR-3
+  {n:'молодший сержант',         ins:{chev:2}},          // OR-5
+  {n:'сержант',                  ins:{chev:3}},          // OR-6
+  {n:'старший сержант',          ins:{chev:4}},          // OR-7
+  {n:'головний сержант',         ins:{chev:5}},          // OR-8
+  {n:'штаб-сержант',             ins:{chev:1, arc:1}},   // OR-9
+  {n:'майстер-сержант',          ins:{chev:2, arc:1}},   // OR-9
+  {n:'старший майстер-сержант',  ins:{chev:3, arc:1}},   // OR-9
+  {n:'головний майстер-сержант', ins:{chev:4, arc:1}},   // OR-9
   {n:'молодший лейтенант',       ins:{star:1}},
   {n:'лейтенант',                ins:{star:2}},
   {n:'старший лейтенант',        ins:{star:3}},
@@ -596,7 +704,8 @@ const RANK_TOK = {'ст':'старший','ст.':'старший','мол':'м�
   'с-т':'сержант','серж':'сержант','серж.':'сержант',
   'л-т':'лейтенант','лейт':'лейтенант','лейт.':'лейтенант',
   'м-р':'майор','п-к':'полковник','п/п-к':'підполковник','підполк':'підполковник',
-  'кап':'капітан','кап.':'капітан','сол':'солдат','сол.':'солдат','ряд':'солдат','ряд.':'солдат'};
+  'кап':'капітан','кап.':'капітан','сол':'солдат','сол.':'солдат','ряд':'солдат','ряд.':'солдат',
+  'рекр':'рекрут','рекр.':'рекрут'};
 function normRank(s){
   const t = (s||'').toLowerCase().replace(/\s+/g,' ').trim();
   if(!t) return '';
@@ -620,17 +729,21 @@ function rankSvg(name){
   const r = RANK_BY_NAME[name];
   if(!r) return '';
   const i = r.ins, p = [];
-  if(i.bar) p.push('<rect x="3" y="15.6" width="14" height="1.8" rx=".9" fill="currentColor"/>');
-  const base = i.bar ? 12.6 : 14.6;
+  // дуга внизу (група OR-9): пологіша й товща за кут, щоб не плутались
+  if(i.arc) p.push('<path d="M3.2 18.4 Q10 15.2 16.8 18.4" fill="none" stroke="currentColor" stroke-width="2.2"/>');
+  const base = i.arc ? 14.2 : 17.4;
   for(let k=0; k<(i.chev||0); k++){
-    const y = base - k*2.5;
-    p.push(`<path d="M3 ${y.toFixed(1)} 10 ${(y-3.5).toFixed(1)} 17 ${y.toFixed(1)}"
-      fill="none" stroke="currentColor" stroke-width="1.5"/>`);
+    const y = base - k*2.7;
+    p.push(`<path d="M4 ${y.toFixed(1)} 10 ${(y-2.8).toFixed(1)} 16 ${y.toFixed(1)}"
+      fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="miter"/>`);
   }
   if(i.star){
+    // генеральські — з горизонтальною планкою знизу, щоб не збігались з офіцерськими
+    const cy = i.gen ? 8.6 : 10;
     const n = i.star, R = i.big ? 3 : 2.5, g = i.big ? 6.4 : 5.4;
-    if(n===4) for(const [dx,dy] of [[-1,-1],[1,-1],[-1,1],[1,1]]) p.push(star(10+dx*g/2, 10+dy*g/2, R));
-    else for(let k=0;k<n;k++) p.push(star(10+(k-(n-1)/2)*g, 10, R));
+    if(n===4) for(const [dx,dy] of [[-1,-1],[1,-1],[-1,1],[1,1]]) p.push(star(10+dx*g/2, cy+dy*g/2, R));
+    else for(let k=0;k<n;k++) p.push(star(10+(k-(n-1)/2)*g, cy, R));
+    if(i.gen) p.push('<rect x="4" y="16.6" width="12" height="1.7" rx=".85" fill="currentColor"/>');
   }
   return p.length ? `<svg viewBox="0 0 20 20" aria-hidden="true">${p.join('')}</svg>` : '';
 }
@@ -685,6 +798,9 @@ const extras = () => PERSONS.filter(p=>active(p) && !p.postId);
 const dismissed = () => PERSONS.filter(p=>p.status==='dismissed');
 const byId = id => PERSONS.find(p=>p.id===id);
 const icon = n => `<svg class="i"><use href="#i-${n}"/></svg>`;
+// На телефоні колонки не вміщуються, а колір рядка й так каже про напрям —
+// лишаємо підрозділ, ПІБ (з посадою дрібним) і дії.
+const MOB = () => innerWidth <= 720;
 const NO_UNIT = '— без підрозділу —';
 const MAIN_SHEET = 'Основна';
 const EXTRA_TAG = 'позаштат';
@@ -710,6 +826,26 @@ const combined = () => !SHEET && sheets().length > 1;
 const cols = () => combined()
   ? [{k:'sheet', t:'Тип підрозділу', kind:'enum'}, ...COLS]
   : COLS;
+/* Пошук: підрядок, ціле слово або регулярний вираз, з урахуванням регістру чи без.
+   Для «цілого слова» \b не годиться — він знає лише латиницю, тож межу
+   визначаємо через сусідні символи з класів букв/цифр Unicode. */
+const SOPT = {case:false, word:false, re:false};
+function makeMatcher(q){
+  q = (q||'').trim();
+  if(!q) return null;
+  const flags = SOPT.case ? 'u' : 'iu';
+  try{
+    if(SOPT.re) return new RegExp(q, flags);
+    const lit = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if(SOPT.word) return new RegExp('(^|[^\\p{L}\\p{N}])' + lit + '($|[^\\p{L}\\p{N}])', flags);
+    return new RegExp(lit, flags);
+  }catch(_){ return 'bad'; }
+}
+function searchHit(rx, text){
+  if(rx === 'bad') return false;
+  rx.lastIndex = 0;
+  return rx.test(text);
+}
 const fActive = k => (F[k] instanceof Set) ? F[k].size>0 : !!F[k];
 const anyFilter = () => COLS.concat([{k:'sheet'}]).some(c=>c.k && fActive(c.k)) || !!$('fSearch').value;
 
@@ -732,11 +868,28 @@ function showTab(t){
     $('view'+k.toUpperCase()).hidden = t!==k;
     $('tab'+k.toUpperCase()).classList.toggle('on', t===k);
   }
-  $('scopeBar').hidden = (t==='d'||t==='l');
+  const scoped = (t==='c'||t==='r');            // штатка й напрям стосуються складу і звіту
+  $('fSheet').hidden = !scoped; $('dirSeg').hidden = !scoped;
   if(t!=='c') clearSel();   // штатка й напрям стосуються складу і звіту
   if(t==='l') loadLog(); else renderAll();
+  measureChrome();
 }
 function setDir(t){ DIR=t; localStorage.setItem('dir',t); renderDirSeg(); renderAll(); }
+async function renameSheet(){
+  const cur = SHEET;
+  const name = await ask({title:'Назва штатки', ok:'Перейменувати', input:true,
+    value: cur || MAIN_SHEET, placeholder:'напр. Бойові',
+    body: cur ? `Перейменувати «<b>${esc(cur)}</b>» в усіх її посадах.`
+              : `Штатку без назви буде названо. Зараз показується як «${MAIN_SHEET}».`});
+  if(name===null || !name.trim() || name.trim()===cur) return;
+  try{
+    const r = await api('sheets/rename', {method:'POST',
+      body:JSON.stringify({from:cur, to:name.trim()})});
+    SHEET = name.trim(); localStorage.setItem('sheet', SHEET);
+    await reload();
+    toast(`Перейменовано, посад: ${r.posts}`);
+  }catch(e){ toast(e.message, true); }
+}
 function setSheet(s){ SHEET=s; localStorage.setItem('sheet',s); fillScope(); renderAll(); }
 function clearFilters(){
   for(const k in F) F[k] instanceof Set ? F[k].clear() : (F[k]='');
@@ -763,20 +916,95 @@ document.addEventListener('mouseout', e=>{
   if(!e.relatedTarget || !e.relatedTarget.closest || !e.relatedTarget.closest('[data-tip]')) hideTip();
 });
 addEventListener('scroll', hideTip, true);
+// розкладка рядка різна для телефона й десктопа — стежимо за перетином межі
+let wasMob = MOB();
+addEventListener('resize', ()=>{
+  hideTip();
+  if(MOB() !== wasMob){ wasMob = MOB(); renderAll(); }
+});
 
-function toggleMenu(e){ e.stopPropagation(); $('menuPop').hidden = !$('menuPop').hidden; }
-document.addEventListener('click', ()=>{ $('menuPop').hidden = true; closeFilter(); });
+// Типово таблиця лише для читання: клік по клітинці виділяє рядок, а не ставить курсор.
+let EDIT = localStorage.getItem('edit') === '1';
+function applyEdit(){
+  $('gMain').classList.toggle('edit', EDIT);
+  const b = $('editBtn');
+  b.setAttribute('aria-pressed', EDIT ? 'true' : 'false');
+  b.dataset.tip = EDIT ? 'Вимкнути редагування полів' : 'Увімкнути редагування полів';
+}
+function toggleEdit(){
+  EDIT = !EDIT;
+  localStorage.setItem('edit', EDIT ? '1' : '0');
+  if(EDIT) clearSel();
+  applyEdit();
+}
+/* Шапка й панель інструментів липкі. На вузьких екранах вони переносяться,
+   тож висоту міряємо, а не хардкодимо — від неї залежить, де прилипає
+   заголовок таблиці. */
+function measureChrome(){
+  const h = document.querySelector('header');
+  const bar = [...document.querySelectorAll('.bar')].find(b=>b.offsetParent !== null);
+  const st = document.documentElement.style;
+  st.setProperty('--hh', (h ? h.offsetHeight : 44)+'px');
+  st.setProperty('--bh', (bar ? bar.offsetHeight : 0)+'px');
+}
+const chromeRO = new ResizeObserver(measureChrome);
+
+function toggleSopt(e){
+  e.preventDefault(); e.stopPropagation();
+  const pop = $('sopt');
+  pop.hidden = !pop.hidden;
+  if(pop.hidden) return;
+  const r = e.currentTarget.getBoundingClientRect();
+  pop.style.left = Math.max(6, Math.min(r.right-210, innerWidth-216))+'px';
+  pop.style.top = (r.bottom+6)+'px';
+}
+function setSopt(){
+  SOPT.case = $('soCase').checked; SOPT.word = $('soWord').checked; SOPT.re = $('soRe').checked;
+  $('soWord').disabled = SOPT.re;                 // у регексі межі задають самим виразом
+  $('soptBtn').classList.toggle('on', SOPT.case || SOPT.word || SOPT.re);
+  $('soHint').textContent = SOPT.re ? 'Напр. ^Іван|енко$' : '';
+  localStorage.setItem('sopt', JSON.stringify(SOPT));
+  renderAll();
+}
+document.addEventListener('click', ()=>{ $('sopt').hidden = true; closeFilter(); });
+// Клік повз рядок знімає виділення. На dragging не зважаємо: якщо mouseup
+// загубився (кнопку відпустили поза вікном), прапорець лишався б зведеним назавжди.
+document.addEventListener('mousedown', ev=>{
+  if(ev.target.closest('.row,[data-range],#selbar,dialog,#fpop,header')) return;
+  dragging = false;
+  if(SEL.size) clearSel();
+});
+// Друк тексту «в порожнечу» потрапляє в пошук поточної вкладки.
+// Не чіпаємо: комбінації з Ctrl/Alt/Cmd, службові клавіші, пробіл (щоб не ламати
+// прокрутку), відкриті діалоги і випадки, коли курсор уже в полі.
+function typeAhead(e){
+  if(e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return false;
+  if(e.key.length !== 1 || e.key === ' ') return false;
+  if(document.querySelector('dialog[open]')) return false;
+  const a = document.activeElement;
+  if(a && (/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName) || a.isContentEditable)) return false;
+  const box = {c:'fSearch', d:'dSearch', l:'lSearch'}[TAB];
+  if(!box) return false;
+  const el = $(box);
+  e.preventDefault();
+  el.focus();
+  el.value += e.key;
+  el.dispatchEvent(new Event('input', {bubbles:true}));
+  return true;
+}
 document.addEventListener('keydown', e=>{
   const typing = /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName);
-  if(e.key==='Escape'){ $('menuPop').hidden = true; closeFilter(); if(!typing) clearSel(); return; }
+  if(e.key==='Escape'){ $('sopt').hidden = true; closeFilter(); if(!typing) clearSel(); return; }
   if((e.ctrlKey||e.metaKey) && (e.key==='a'||e.key==='A') && TAB==='c' && !typing
      && !document.querySelector('dialog[open]')){
     e.preventDefault();
     SEL.clear(); for(const k of ORDER) SEL.add(k); anchor = 0; paintSel(); return;
   }
   const box = {c:'fSearch', d:'dSearch', l:'lSearch'}[TAB];
-  if(e.key==='/' && box && !/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName)
-     && !document.querySelector('dialog[open]')){ e.preventDefault(); $(box).focus(); }
+  if(e.key==='/' && box && !typing && !document.querySelector('dialog[open]')){
+    e.preventDefault(); $(box).focus(); return;      // «/» лише фокусує, не друкується
+  }
+  typeAhead(e);
 });
 async function loadLog(){ try{ LOGS = await api('log'); renderLog(); }catch(e){ toast(e.message,true); } }
 
@@ -815,10 +1043,9 @@ function fillScope(){
   if(SHEET && !sh.includes(SHEET)) SHEET='';
   $('fSheet').innerHTML = '<option value="">Разом (усі штатки)</option>'
     + sh.map(s=>`<option value="${esc(s)}"${s===SHEET?' selected':''}>${esc(sheetName(s))}</option>`).join('');
-  // одна штатка — перемикач нічого не дає, ховаємо його
-  const one = sh.length < 2;
-  $('fSheet').hidden = one; $('lblSheet').hidden = one;
+  // перемикач показуємо завжди — інакше не видно, що штаток може бути кілька
   $('sheetList').innerHTML = sh.filter(Boolean).map(s=>`<option>${esc(s)}</option>`).join('');
+  $('renSheet').disabled = !POSTS.length;
   $('unitList').innerHTML = unitsInOrder().filter(u=>u!==NO_UNIT).map(u=>`<option>${esc(u)}</option>`).join('');
   $('nRank').innerHTML = '<option value="">—</option>'+RANKS.map(r=>`<option>${esc(r.n)}</option>`).join('');
   renderDirSeg();
@@ -878,10 +1105,10 @@ function passFilters(e){
     if(c.kind==='enum'){ if(!F[c.k].has(facet(e,c.k))) return false; }
     else if(!String(e[c.k]||'').toLowerCase().includes(F[c.k].toLowerCase())) return false;
   }
-  const q = $('fSearch').value.trim().toLowerCase();
-  if(q){
-    const hay = [e.unit,e.position,e.tag,e.pib,e.rankRaw,e.cert,sheetName(e.sheet)].join(' ').toLowerCase();
-    if(!hay.includes(q)) return false;
+  const rx = makeMatcher($('fSearch').value);
+  if(rx){
+    const hay = [e.unit,e.position,e.tag,e.pib,e.rankRaw,e.cert,sheetName(e.sheet)].join(' ');
+    if(!searchHit(rx, hay)) return false;
   }
   return true;
 }
@@ -919,11 +1146,11 @@ function blocksOf(groups){
 function renderMain(){
   const groups = buildGroups();
   const sh = combined();
-  $('gMain').classList.toggle('sh', sh);
-  const out = [cols().map(hcell).join('')];
+  $('gMain').classList.toggle('sh', sh && !MOB());
+  const out = MOB() ? [] : [cols().map(hcell).join('')];
   ORDER = []; RMAP = new Map();
   for(const b of blocksOf(groups)){
-    if(sh){
+    if(sh && !MOB()){
       const span = b.groups.reduce((n,g)=>n+g.span, 0);
       const posts = b.groups.reduce((n,g)=>n+g.total, 0);
       const occ = b.groups.reduce((n,g)=>n+g.occ, 0);
@@ -938,6 +1165,7 @@ function renderMain(){
       const gFrom = ORDER.length, gTo = gFrom + g.entries.length - 1;
       out.push(`<div class="c unit" style="grid-row:span ${g.span}" data-range="${gFrom},${gTo}">
         <div class="u">${esc(g.unit)}</div>
+        ${sh && MOB() ? `<div class="s">${esc(sheetName(g.sheet))}</div>` : ''}
         ${g.total ? `<div class="q num">${g.occ}/${g.total}${DIR?' '+esc(DIR):''}</div>` : ''}
       </div>`);
       for(const e of g.entries){
@@ -956,17 +1184,66 @@ function renderMain(){
   }
   $('gMain').innerHTML = out.join('');
   $('fClear').hidden = !anyFilter();
+  $('fSearch').closest('.search').classList.toggle('bad', makeMatcher($('fSearch').value)==='bad');
   for(const k of [...SEL]) if(!RMAP.has(k)) SEL.delete(k);   // зникло після фільтра
-  paintSel();
+  applyEdit(); paintSel();
+}
+// Підсумок живе в заголовках: число стоїть біля назви тієї колонки, якої стосується.
+function headStat(k){
+  const t = reportTotals();
+  const m = {
+    tag:      {v:t.shtat,   tip:'посад за штатом' + (DIR?' ('+DIR+')':'')},
+    position: {v:t.vac,     tip:'вакантних посад', warn:false},
+    pib:      {v:t.spysok,  tip:`за списком: ${t.shtatni} штатних + ${t.poza} позаштатних`},
+    state:    {v:t.nayav,   tip:`в наявності (відсутніх: ${t.absent})`, warn:t.absent>0},
+  }[k];
+  if(!m || !m.v) return '';
+  return `<b class="hn${m.warn?' warn':''}" data-tip="${esc(m.tip)}">${m.v}</b>`;
 }
 function hcell(c){
   if(!c.k) return '<div class="c h"></div>';
-  return `<div class="c h"><button class="fh${fActive(c.k)?' on':''}"
-    onclick="openFilter(event,'${c.k}')"><span>${esc(c.t)}</span>${icon('filter')}</button></div>`;
+  const ctr = c.k==='rank' ? ' ctr' : '';       // заголовок над центрованою колонкою
+  return `<div class="c h${ctr}"><button class="fh${fActive(c.k)?' on':''}"
+    onclick="openFilter(event,'${c.k}')"><span>${esc(c.t)}</span></button>${headStat(c.k)}</div>`;
 }
 const kd = `onkeydown="if(event.key==='Enter')event.target.blur()"`;
 
+function rowHtmlMob(e, k, i){
+  const {post, person:p} = e;
+  const tag = post ? (post.tag||'') : '';
+  const hi = p ? isHi(e) : !!(DIR && tag && tag===DIR);
+  const cls = ['row', tag?'tint':'', hi?'on':'', (post&&!p)?'vac':'', e.abs?'away':'']
+    .filter(Boolean).join(' ');
+  const attrs = ` style="--rh:${hueOf(tag)}" data-k="${k}" data-i="${i}"`;
+  const sub = [post ? post.position : (p.position||''), e.abs ? absName(e.abs.kind) : '']
+    .filter(Boolean).join(' · ');
+
+  if(post && !p){
+    return `<div class="${cls}"${attrs} onfocusout="vacantOut(event,'${post.id}')">
+      <div class="c m2">
+        <div class="l1"><input class="cell in-pib mono" placeholder="вписати ПІБ" ${kd}></div>
+        <div class="l2">${esc(sub)}</div>
+      </div>
+      <div class="c macts">
+        <input class="cell in-rank" hidden>
+        <button class="ico red" data-tip="Видалити посаду" onclick="delPost('${post.id}')">${icon('trash')}</button>
+      </div></div>`;
+  }
+  const acts = post
+    ? `<button class="ico" data-tip="Перемістити" onclick="openMove('${p.id}')">${icon('move')}</button>
+       <button class="ico red" data-tip="Вибув" onclick="dismiss('${p.id}')">${icon('out')}</button>`
+    : `<button class="ico" data-tip="На посаду" onclick="openMove('${p.id}')">${icon('move')}</button>
+       <button class="ico red" data-tip="Вибув" onclick="dismiss('${p.id}')">${icon('out')}</button>`;
+  return `<div class="${cls}"${attrs}>
+    <div class="c m2">
+      <div class="l1">${rankFace(e)}<span class="nm mono">${esc(p.pib)}</span></div>
+      <div class="l2">${esc(sub)}</div>
+    </div>
+    <div class="c macts">${expBtn(p)}${acts}</div>
+  </div>`;
+}
 function rowHtml(e, k, i){
+  if(MOB()) return rowHtmlMob(e, k, i);
   const dat = ` data-k="${k}" data-i="${i}"`;
   const {post, person:p} = e;
   const tag = post ? (post.tag||'') : '';
@@ -1016,17 +1293,18 @@ function tagCell(tag){
   return `<div class="c">${tag ? `<span class="chip tag">${esc(tag)}</span>` : ''}</div>`;
 }
 // Знак розрізнення + прихований select поверх: клік відкриває звичайний список звань
-function rankCell(p, e){
+function rankFace(e){
   const known = e.rank, svg = known ? rankSvg(known) : '';
+  const p = e.person;
   const unknown = !known && e.rankRaw ? `<option selected>${esc(e.rankRaw)}</option>` : '';
   const opts = RANKS.map(r=>`<option${r.n===known?' selected':''}>${esc(r.n)}</option>`).join('');
-  // відоме звання без знаків (солдат) — порожньо; текстом лишається тільки нерозпізнане
   const face = svg || (known ? '' : `<span class="raw">${esc(e.rankRaw||'')}</span>`);
-  return `<div class="c ctr"><div class="rk" data-tip="${esc(e.rankRaw||'звання не вказано')}">${face}
+  return `<div class="rk" data-tip="${esc(e.rankRaw||'звання не вказано')}">${face}
     <select onchange="saveRank('${p.id}',this.value)">
       <option value=""${!known&&!e.rankRaw?' selected':''}>—</option>${unknown}${opts}
-    </select></div></div>`;
+    </select></div>`;
 }
+function rankCell(p, e){ return `<div class="c ctr">${rankFace(e)}</div>`; }
 function stateChip(e){
   if(!e.abs) return '<span class="dim">—</span>';
   const a = e.abs;
@@ -1091,14 +1369,13 @@ function renderSum(){
   const t = reportTotals();
   const cells = [
     {l: DIR ? 'штат '+DIR : 'за штатом', v:t.shtat, hi:!!DIR},
-    {l:'укомплектовано', v:t.shtatni},
+    {l:'укомпл.', v:t.shtatni},
     {l:'вакансій', v:t.vac},
-    {l:'позаштатних', v:t.poza},
+    {l:'позашт.', v:t.poza},
     {l:'відсутніх', v:t.absent, warn:t.absent>0},
-    {l:'в наявності', v:t.nayav},
+    {l:'наявних', v:t.nayav},
   ];
-  $('sum').innerHTML = cells.map(c=>`<div class="cell${c.hi?' hi':''}${c.warn?' warn':''}">
-    <div class="l">${esc(c.l)}</div><div class="v">${c.v}</div></div>`).join('');
+  return;   // підсумок тепер у заголовках колонок
 }
 
 /* ================= ЗВІТ ================= */
@@ -1172,9 +1449,9 @@ function renderReport(){
 
 /* ================= ВИБУЛІ / ЖУРНАЛ ================= */
 function renderDismissed(){
-  const q = $('dSearch').value.trim().toLowerCase();
+  const rx = makeMatcher($('dSearch').value);
   const all = dismissed();
-  const list = q ? all.filter(p=>(p.pib+' '+p.unit+' '+p.position).toLowerCase().includes(q)) : all;
+  const list = rx ? all.filter(p=>searchHit(rx, p.pib+' '+p.unit+' '+p.position)) : all;
   const head = ['Підрозділ','в/з','ПІБ','Останнє місце','Допуски','']
     .map((t,i)=>`<div class="c h${i===1||i===4?' ctr':''}" style="padding:0 10px">${t}</div>`).join('');
   const rows = list.map(p=>{
@@ -1194,8 +1471,8 @@ function renderDismissed(){
   $('gOut').innerHTML = head + (rows || '<div class="empty">Вибулих немає</div>');
 }
 function renderLog(){
-  const q = $('lSearch').value.trim().toLowerCase();
-  const list = q ? LOGS.filter(l=>(l.pib+' '+l.action+' '+l.details).toLowerCase().includes(q)) : LOGS;
+  const rx = makeMatcher($('lSearch').value);
+  const list = rx ? LOGS.filter(l=>searchHit(rx, l.pib+' '+l.action+' '+l.details)) : LOGS;
   const head = ['Час','ПІБ','Дія','Деталі'].map(t=>`<div class="c h" style="padding:0 10px">${t}</div>`).join('');
   const rows = list.map(l=>`<div class="row">
     <div class="c small dim mono">${new Date(l.ts).toLocaleString('uk-UA')}</div>
@@ -1228,10 +1505,29 @@ let anchor = -1, dragBase = null, dragging = false;
 const rowKey = e => e.person ? e.person.id : 'p:'+e.post.id;
 
 function paintSel(){
-  for(const el of $('gMain').querySelectorAll('.row[data-k]'))
-    el.classList.toggle('sel', SEL.has(el.dataset.k));
+  const rows = [...$('gMain').querySelectorAll('.row[data-k]')];
+  for(const el of rows) el.classList.toggle('sel', SEL.has(el.dataset.k));
   $('selN').textContent = SEL.size;
-  $('selbar').hidden = SEL.size === 0;
+  const bar = $('selbar');
+  bar.hidden = SEL.size === 0;
+  if(bar.hidden || MOB()) return;
+  placeSelbar(rows.filter(r=>r.classList.contains('sel')));
+}
+// Тулбар тримається самого виділення: над першим рядком, а якщо там немає
+// місця під липкою панеллю — під останнім.
+function placeSelbar(sel){
+  if(!sel.length) return;
+  const bar = $('selbar');
+  const first = sel[0].getBoundingClientRect();
+  const last = sel[sel.length-1].getBoundingClientRect();
+  const bw = bar.offsetWidth, bh = bar.offsetHeight;
+  const topLimit = (document.querySelector('header').offsetHeight||44)
+    + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bh'))||0) + 30;
+  let y = first.top - bh - 6;
+  if(y < topLimit) y = Math.min(last.bottom + 6, innerHeight - bh - 6);
+  const x = Math.max(8, Math.min(first.left + 40, innerWidth - bw - 8));
+  bar.style.left = x+'px';
+  bar.style.top = Math.max(6, y)+'px';
 }
 function clearSel(){ SEL.clear(); anchor = -1; paintSel(); }
 function applyRange(a, b){
@@ -1245,7 +1541,9 @@ function initSelection(){
   const g = $('gMain');
   g.addEventListener('mousedown', ev=>{
     if(ev.button!==0) return;
-    if(ev.target.closest('input,select,button,textarea,a')) return;   // не заважаємо редагуванню
+    // у режимі редагування не перехоплюємо кліки по полях
+    if(EDIT && ev.target.closest('input,select,textarea')) return;
+    if(ev.target.closest('button,a')) return;
     const grp = ev.target.closest('[data-range]');
     const row = ev.target.closest('.row[data-i]');
     if(!grp && !row) return;
@@ -1978,8 +2276,16 @@ async function exportXlsx(){
 
 /* ================= СТАРТ ================= */
 document.documentElement.style.setProperty('--dh', hueOf(DIR));
+try{ Object.assign(SOPT, JSON.parse(localStorage.getItem('sopt')||'{}')); }catch(_){}
+$('soCase').checked=SOPT.case; $('soWord').checked=SOPT.word; $('soRe').checked=SOPT.re;
+setSopt();
 initSelection();
+if(MOB()) EDIT=false;   // телефон — лише перегляд
+applyEdit();
+chromeRO.observe(document.querySelector('header'));
+for(const b of document.querySelectorAll('.bar')) chromeRO.observe(b);
 showTab('c');
+measureChrome();
 if(KEY){ login.hidden=true; boot(); } else { login.hidden=false; }
 </script>
 </body>

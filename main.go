@@ -884,7 +884,16 @@ func renameSheet(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, map[string]int64{"posts": 0})
 		return
 	}
-	res, err := posts.UpdateMany(r.Context(), bson.M{"sheet": in.From},
+	// Головна штатка не має назви, а посади, залиті до появи штаток, поля
+	// sheet взагалі не мають — фільтр за "" їх не бачив і перейменування
+	// мовчки не робило нічого.
+	filter := bson.M{"sheet": in.From}
+	if in.From == "" {
+		filter = bson.M{"$or": []bson.M{
+			{"sheet": ""}, {"sheet": nil}, {"sheet": bson.M{"$exists": false}},
+		}}
+	}
+	res, err := posts.UpdateMany(r.Context(), filter,
 		bson.M{"$set": bson.M{"sheet": in.To}})
 	if err != nil {
 		writeErr(w, 500, err.Error())
@@ -1136,6 +1145,12 @@ func main() {
 	journal = db.Collection("journal")
 	imports = db.Collection("imports")
 
+	// Разові операції над базою: зробив і вийшов, сервер не піднімаємо.
+	if i := indexOf(os.Args, "-phones"); i > 0 && i+1 < len(os.Args) {
+		runPhones(context.Background(), os.Args[i+1], indexOf(os.Args, "-apply") > 0)
+		return
+	}
+
 	mux := http.NewServeMux()
 	api := http.NewServeMux()
 	api.HandleFunc("GET /api/posts", listPosts)
@@ -1178,4 +1193,13 @@ func main() {
 	}
 	log.Printf("Сервер на :%s", port)
 	log.Fatal(http.ListenAndServe(":"+port, mux))
+}
+
+func indexOf(ss []string, want string) int {
+	for i, s := range ss {
+		if s == want {
+			return i
+		}
+	}
+	return -1
 }

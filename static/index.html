@@ -15,7 +15,7 @@
   --dir:hsl(var(--dh) 52% 62%);
   --dir-bg:hsl(var(--dh) 30% 15%);
   --dir-line:hsl(var(--dh) 30% 26%);
-  --hh:40px; --r:5px; --cx:9px;
+  --hh:44px; --r:5px; --cx:8px;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -29,8 +29,11 @@ svg.i{width:15px;height:15px;flex:none;stroke:currentColor;fill:none;
 svg.i.fill{fill:currentColor;stroke:none}
 
 /* ---------- шапка ---------- */
-header{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;
-  height:var(--hh);padding:0 12px;background:var(--panel);border-bottom:1px solid var(--line)}
+/* Смуга на всю ширину, але вміст тримається тієї ж колонки, що й таблиця:
+   на широкому екрані кнопки інакше опиняються в різних кінцях монітора. */
+header{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:10px;
+  height:var(--hh);padding:0 max(12px, calc((100% - 1340px) / 2));
+  background:var(--panel);border-bottom:1px solid var(--line)}
 header>*{flex:none}
 header .grow{flex:1 1 auto;min-width:0}
 header #fSheet{max-width:230px}
@@ -52,6 +55,9 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
   font-size:12px;line-height:1;cursor:pointer;white-space:nowrap;
   display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .btn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:0 9px}
+/* Кнопка без підпису — кругла: так вона читається як дія, а не як поле. */
+.btn.ico2{width:30px;height:30px;padding:0;border-radius:50%;justify-content:center;flex:none}
+.btn.ico2 .i{width:15px;height:15px}
 .btn:hover{border-color:var(--edge)}
 .btn.primary{background:var(--gold);border-color:var(--gold);color:#15171a;font-weight:600}
 .btn.danger{background:var(--danger);border-color:var(--danger);color:#15171a;font-weight:600}
@@ -70,14 +76,23 @@ label.file{cursor:pointer} label.file input{display:none}
   box-shadow:inset 0 0 0 1px hsl(var(--h) 30% 30%)}
 
 /* ---------- панелі ---------- */
-main{max-width:1560px;margin:0 auto;padding:10px 12px 40px}
+/* Ширша робоча область не додає читабельності — колонки просто розповзаються,
+   а очам доводиться долати пів екрана між посадою і прізвищем. */
+main{max-width:1340px;margin:0 auto;padding:10px 12px 40px}
 /* панель лишається під шапкою при прокрутці, інакше кнопки «тікають» угору.
    Три зони: дії зліва, пошук строго по центру, файли справа. */
 .bar{position:sticky;top:var(--hh);z-index:25;display:grid;align-items:center;
-  grid-template-columns:1fr minmax(180px,320px) 1fr;gap:8px;
+  grid-template-columns:1fr auto 1fr;gap:8px;
   margin:0 -12px 6px;padding:6px 12px;background:var(--bg)}
-.bar .search{margin:0 auto;max-width:none;width:100%}
+/* Дії тримаються пошуку: розкидані по кутах, вони змушували водити очима. */
+.bar .mid{display:flex;align-items:center;gap:6px;justify-self:center}
+.bar .mid .search{width:min(46vw,420px);max-width:none;margin:0}
+.bar .grp.start{justify-self:start}
 .bar .grp.end{justify-self:end}
+.bar.plain{display:flex;gap:8px;align-items:center}
+.bar.plain .btn{flex:none}
+.grp .sep{width:1px;height:18px;background:var(--line);margin:0 2px}
+header .hsep{width:1px;height:20px;background:var(--line);margin:0 4px;flex:none}
 .bar .lbl{font-size:12px;color:var(--faint);text-transform:uppercase;letter-spacing:.07em}
 .search{display:flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);
   border-radius:var(--r);padding:0 8px;min-width:170px;flex:1;max-width:270px}
@@ -107,43 +122,51 @@ main{max-width:1560px;margin:0 auto;padding:10px 12px 40px}
 
 /* ---------- сітка ---------- */
 .grid{display:grid;background:var(--panel);border:1px solid var(--line);align-content:start}
+/* Кожна штатка — своя таблиця: назва зверху, далі власна шапка. */
+.tables{display:flex;flex-direction:column;align-items:center;gap:14px}
+.tbl{min-width:0;max-width:100%}
+/* Рамка навколо складу зайва — його межі й так задають шапка та останній рядок. */
+.g-main{border:0;border-bottom:1px solid var(--line);background:none}
+/* Ширину задає вміст, а не вікно: колонка рівно така, якої потребує
+   найдовше значення серед усіх підрозділів. Довгі посади й ПІБ обмежені, щоб
+   один запис не розтягнув усю таблицю. */
 .g-main{grid-template-columns:
-  minmax(92px,.8fr) 30px 88px minmax(152px,2fr) 62px minmax(142px,1.5fr)
-  114px minmax(92px,.9fr) 42px 84px}
-/* .sh — режим «Разом»: зліва додається злитий стовпчик «Тип підрозділу» */
-.g-main.sh{grid-template-columns:
-  minmax(136px,.6fr) minmax(86px,.7fr) 30px 88px minmax(146px,1.9fr) 62px
-  minmax(130px,1.35fr) 114px minmax(86px,.85fr) 42px 84px}
-.g-rep{grid-template-columns:minmax(120px,2fr) repeat(7,minmax(62px,.7fr)) minmax(104px,1fr)}
-.g-rep.sh{grid-template-columns:minmax(104px,1.1fr) minmax(112px,1.5fr)
-  repeat(7,minmax(60px,.65fr)) minmax(98px,.9fr)}
-.c.sheetcell{flex-direction:column;align-items:flex-start;justify-content:flex-start;
-  padding:7px var(--cx);background:var(--bg);border-right:1px solid var(--line);
-  border-bottom:1px solid var(--line);font-weight:600;font-size:13px;line-height:1.25}
-.sheethead{grid-column:1/-1;display:flex;align-items:baseline;gap:8px;
-  padding:5px 9px;background:var(--panel2);border-bottom:1px solid var(--line);
-  font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em}
-.sheethead .q{font-weight:400;text-transform:none;letter-spacing:0;color:var(--faint)}
-.c.sheetcell .q{font-size:11px;color:var(--faint);font-weight:400;margin-top:2px}
+  max-content minmax(150px,max-content) 46px minmax(150px,max-content)
+  max-content minmax(84px,max-content) max-content;
+  width:max-content;max-width:100%;margin:0 auto}
+.g-main .pos .t{max-width:440px}
+.g-main .nm{max-width:320px}
+/* картковий звіт для телефона */
+.g-rep.mob{display:block;border:0;background:none}
+.rcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:7px 9px;margin-bottom:6px}
+.rcard.tot{background:var(--panel2)}
+.rcard .rh{font-weight:600;font-size:13px;margin-bottom:5px}
+.rcard .rh .dim{font-weight:400;font-size:11px}
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px}
+.rc{display:flex;align-items:baseline;justify-content:space-between;gap:6px;
+  font-size:12px;color:var(--faint);border-bottom:1px solid var(--line);padding:2px 0}
+.rc b{color:var(--txt);font-variant-numeric:tabular-nums}
+.rc.warn b{color:var(--warn)}
+.g-rep{grid-template-columns:minmax(120px,max-content) repeat(8,minmax(56px,max-content));
+  width:max-content;max-width:100%;margin:0 auto}
 .g-out{grid-template-columns:minmax(120px,1fr) 62px minmax(180px,1.6fr) minmax(200px,2fr) 90px 84px}
 .g-log{grid-template-columns:150px minmax(160px,1.2fr) 130px minmax(220px,3fr)}
-.c{display:flex;align-items:center;gap:6px;padding:0 var(--cx);min-height:29px;
+.c{display:flex;align-items:center;gap:5px;padding:0 var(--cx);min-height:26px;
   border-bottom:1px solid var(--line);overflow:hidden}
-.c.h{position:sticky;top:calc(var(--hh) + var(--bh,0px));z-index:20;min-height:26px;padding:0 4px;
-  justify-content:center;text-align:center;
-  background:var(--panel2);font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint)}
+/* Шапка: без капслока, розрядки й власного фону — лише одна лінія знизу. */
+.c.h{position:sticky;top:calc(var(--hh) + var(--bh,0px));z-index:20;min-height:25px;padding:0 3px;
+  justify-content:center;text-align:center;background:var(--sink);color:var(--dim);
+  border-bottom:1px solid var(--edge);font-size:11.5px;font-weight:600}
 .c.ctr{justify-content:center;padding:0 4px}
-.c.selcell{justify-content:center;padding:0;cursor:pointer}
-.selbox{width:14px;height:14px;border:1.5px solid var(--edge);border-radius:3px;flex:none;
-  display:inline-flex;align-items:center;justify-content:center;background:var(--panel2)}
-.c.selcell:hover .selbox{border-color:var(--gold)}
-.row.sel .selbox,.selbox.on{background:var(--gold);border-color:var(--gold)}
-.row.sel .selbox::after,.selbox.on::after{content:'';width:6px;height:3px;
-  border:2px solid #15171a;border-top:0;border-right:0;
-  transform:rotate(-45deg) translate(1px,-2px)}
-.selbox.some{border-color:var(--gold)}
-.selbox.some::after{content:'';width:7px;height:2px;background:var(--gold);border:0;transform:none}
+/* Ручка виділення — сам знак розрізнення: окремий стовпчик під чекбокси зайвий. */
+.selcell{cursor:pointer}
+.c.selcell:hover .rk>svg,.rk.selcell:hover>svg{color:var(--txt)}
+.row.sel .rk>svg{color:var(--gold)}
+.c.h.selall{cursor:pointer}
+.c.h.selall.on,.c.h.selall.some{color:var(--gold)}
 .grid.painting{user-select:none}
+.grid.painting .selcell{cursor:ns-resize}
 .c.ctr input.cell{margin:0;width:100%;text-align:center}
 .c.end{justify-content:flex-end;padding-right:8px}
 .c.rt{justify-content:flex-end;font-variant-numeric:tabular-nums}
@@ -155,81 +178,95 @@ main{max-width:1560px;margin:0 auto;padding:10px 12px 40px}
 
 /* кнопка-фільтр у заголовку */
 .fh{display:flex;align-items:center;justify-content:center;gap:3px;max-width:100%;
+  line-height:1.15;
   background:none;border:0;color:inherit;font:inherit;letter-spacing:inherit;
-  text-transform:inherit;cursor:pointer;padding:4px 5px;border-radius:4px;overflow:hidden}
+  text-transform:inherit;cursor:pointer;padding:3px 5px;border-radius:4px;overflow:hidden}
 .fh span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:-.07em}
-.fh.on{position:relative}
-.fh.on::after{content:'';position:absolute;left:50%;bottom:1px;width:14px;margin-left:-7px;
-  height:2px;border-radius:1px;background:currentColor}
+
 /* підсумок — маленьким чіпом біля назви колонки */
 .hn{display:inline-flex;align-items:center;justify-content:center;height:14px;min-width:16px;
   padding:0 4px;border-radius:7px;background:var(--sink);color:var(--txt);
   font-size:10px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:0;flex:none}
 .hn.warn{background:hsl(38 30% 18%);color:var(--warn)}
 .hn.warn{color:var(--warn)}
-.fh:hover{background:var(--panel);color:var(--txt)} .fh:hover svg{opacity:.5}
+.fh:hover{background:var(--panel2);color:var(--txt)} .fh:hover svg{opacity:.5}
 .fh.on{color:var(--dir);background:var(--dir-bg)} .fh.on svg{opacity:1}
+.fh svg{width:11px;height:11px;opacity:.45;flex:none}
+.tagdot{width:9px;height:9px;border-radius:2px;background:hsl(var(--h) 45% 50%);flex:none}
 
-/* підрозділ — злитий стовпчик */
-.c.unit{flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:1px;
-  padding:7px var(--cx);background:var(--sink);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
-.c.unit .u{font-weight:600;font-size:13px;line-height:1.25}
-.c.unit .q{font-size:11px;color:var(--faint)}
-.c.unit .s{font-size:11px;color:var(--dim)}
+/* Підрозділ — чіп посередині: смуга на всю ширину додавала зайву межу,
+   а просвіт довкола і так відділяє одну групу від іншої. */
+.unitband{grid-column:1/-1;display:flex;justify-content:center;
+  margin:12px 0 3px;background:none;border:0}
+.uchip{display:inline-flex;align-items:baseline;gap:7px;padding:2px 12px;
+  background:var(--panel2);border:1px solid var(--line);border-radius:999px;
+  color:var(--txt);font-size:12px;font-weight:600;line-height:1.5}
+.uchip .q{font-weight:400;font-size:11px;color:var(--faint)}
+.uchip.on{border-color:var(--dir);color:var(--dir)}
+.ufilt{display:inline-flex;align-items:center;background:none;border:0;padding:0;margin-left:1px;
+  color:var(--faint);cursor:pointer}
+.ufilt:hover{color:var(--gold)}
+.ufilt svg{width:11px;height:11px}
+.g-main>.c.h+.unitband,.g-main>.unitband:first-child{margin-top:6px}
 
-/* власний відтінок мітки: МРТ синюватий, РЕБ червонуватий — але дуже стримано */
-.row.tint>.c{background:hsl(var(--rh) 18% 12.5%)}
-.row.tint:hover>.c{background:hsl(var(--rh) 20% 15.5%)}
-.row.on>.c{background:hsl(var(--rh) 24% 14.5%)}
-.row.on:hover>.c{background:hsl(var(--rh) 26% 17%)}
-.row.on>.c:first-child{box-shadow:inset 2px 0 0 hsl(var(--rh) 40% 52%)}
+/* Відтінок напряму — тільки в обраних. Тон стриманий: колір тут позначає
+   належність, а не привертає увагу, інакше він свариться з виділенням. */
+.row.tint>.c{background:hsl(var(--rh) 20% 12%)}
+.row.tint:hover>.c{background:hsl(var(--rh) 22% 15%)}
+.row.on>.c{background:hsl(var(--rh) 26% 13.5%)}
+.row.on:hover>.c{background:hsl(var(--rh) 28% 16.5%)}
 .row.vac>.c{background:var(--sink)}
-.row.vac.tint>.c{background:hsl(var(--rh) 14% 10.5%)}
+.row.vac.tint>.c{background:hsl(var(--rh) 16% 10.5%)}
 .row.vac:hover>.c{background:var(--panel2)}
 .row.vac .pos,.row.vac .chip.tag{color:var(--faint)}
 .row.away>.c{opacity:.6}
-/* виділення діапазонів: правило після .on, щоб перекривало підсвітку напряму */
-.row.sel>.c{background:hsl(45 13% 17%)}
-.row.sel:hover>.c{background:hsl(45 14% 19.5%)}
-.row.sel>.c:first-child{box-shadow:inset 3px 0 0 var(--gold)}
+/* Виділення: правило після .on, щоб перекривало підсвітку напряму.
+   Тон майже нейтральний — інакше воно спорить із синім МРТ і червоним РЕБ. */
+.row.sel>.c{background:hsl(45 8% 18%)}
+.row.sel:hover>.c{background:hsl(45 9% 21%)}
+.row.sel>.c:first-child{box-shadow:inset 2px 0 0 var(--gold)}
 .grid.dragging{user-select:none;cursor:default}
-.c.unit,.c.sheetcell{cursor:pointer}
 .hintline{font-size:12px;color:var(--faint);margin:0 0 10px}
+.pform.cardtop{grid-template-columns:repeat(4,1fr);margin-bottom:10px}
+.pform label.ro input{background:var(--sink);color:var(--dim);border-style:dashed}
+.cardacts{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+/* вибір «куди» — той самий перемикач, що й напрями вгорі */
+.seg.pick{width:100%;justify-content:stretch}
+.seg.pick button{flex:1;padding:5px 8px;font-size:12.5px}
+.seg.pick button.on{background:var(--panel2);color:var(--txt);font-weight:600}
 
+/* Прізвище — вхід у картку: там і правка, і допуски, і відсутність. */
+.nm.lnk{cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm.lnk:hover{color:var(--gold);text-decoration:underline;text-underline-offset:2px}
+.nm.vac{color:var(--faint);font-style:italic}
+.c.pibcell{gap:8px}
+.ph{font-size:12px;color:var(--faint);text-decoration:none;flex:none;letter-spacing:.02em}
+.ph:hover{color:var(--dir);text-decoration:underline;text-underline-offset:2px}
 .pos{min-width:0}
 .pos .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .c.pos>.t{padding-left:0}
 .chip{flex:none;padding:0;background:none;border:0;color:var(--dim);
   font-size:12px;white-space:nowrap;letter-spacing:.02em}
-.chip.tag{color:hsl(var(--rh) 38% 63%);font-weight:600;font-size:11.5px;letter-spacing:.04em}
+.chip.tag{color:var(--dim);font-weight:600;font-size:11.5px;letter-spacing:.04em}
+.row.tint .chip.tag{color:hsl(var(--rh) 42% 64%)}
 .chip.vac{color:var(--faint);font-style:italic}
+button.vac.lnk{background:none;border:0;padding:0;font:inherit;font-style:italic;
+  color:var(--faint);cursor:pointer}
+button.vac.lnk:hover{color:var(--gold);text-decoration:underline;text-underline-offset:2px}
 .chip.main{color:var(--txt)}
 .chip.away{color:var(--warn)}
 /* поки режим редагування вимкнено — поля лише показують, клік іде на виділення */
-.grid:not(.edit) input.cell,.grid:not(.edit) .rk select{pointer-events:none}
-.grid:not(.edit) input.cell{border-color:transparent!important;background:none!important}
-.grid:not(.edit) input.cell::placeholder{color:transparent}
-.grid.edit input.cell::placeholder{color:var(--dim)}
-.grid:not(.edit) .row.vac .l1 input.cell::placeholder{color:var(--faint)}
+/* офлайн: усе, що пише на сервер, недоступне */
+/* Офлайн: усе, що пише на сервер, недоступне. Читати й копіювати можна. */
+body.offline .bar .mid .btn.ico2,body.offline .uchip .ufilt,
+body.offline #renSheet{opacity:.4;pointer-events:none}
 .btn[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:#15171a;font-weight:600}
 input.cell{width:calc(100% + var(--cx)*2);margin:0 calc(var(--cx)*-1);background:none;
   border:1px solid transparent;padding:3px calc(var(--cx) - 1px);border-radius:5px;
   min-width:0;text-overflow:ellipsis}
 /* у режимі редагування поле видно завжди, на будь-якому відтінку рядка */
-.grid.edit input.cell{background:rgba(255,255,255,.045);border-color:rgba(255,255,255,.14)}
-.grid.edit input.cell:hover{background:rgba(255,255,255,.075);border-color:rgba(255,255,255,.3)}
-.grid.edit input.cell:focus{background:#0f1114;border-color:var(--gold);outline:none}
-.grid.edit .rk{border:1px solid rgba(255,255,255,.14);border-radius:5px;
-  background:rgba(255,255,255,.045)}
-.grid.edit .rk:hover{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.075)}
-input.cell:hover{border-color:var(--line)}
-input.cell:focus{background:var(--bg);border-color:var(--edge);outline:none}
-input.cell.saved{border-color:var(--ok)}
-input.cell::placeholder{color:var(--faint);font-style:italic}
-
-/* звання — знак розрізнення; редагується прихованим select поверх */
 .rk{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:26px}
-.rk>svg{width:27px;height:27px;color:var(--dim)}
+.rk>svg{width:19px;height:23px;color:var(--dim)}
 .rk:hover>svg{color:var(--txt)}
 .rk .raw{font-size:11px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rk select{position:absolute;inset:0;width:100%;opacity:0;cursor:pointer;padding:0;border:0}
@@ -237,15 +274,9 @@ input.cell::placeholder{color:var(--faint);font-style:italic}
 .acts{display:flex;gap:1px;justify-content:flex-end}
 @media (hover:hover){.acts{opacity:0;transition:opacity .1s}
   .row:hover .acts,.row:focus-within .acts{opacity:1}}
-.exp{display:inline-flex;align-items:center;gap:4px;background:none;border:0;color:var(--faint);
-  cursor:pointer;font:inherit;font-size:12px;padding:3px 5px;border-radius:4px}
-.exp:hover{color:var(--txt);background:var(--sink)}
-.exp svg{width:13px;height:13px;transition:transform .12s}
-.exp.open svg{transform:rotate(90deg)}
 
 /* розгортка */
-.detail{grid-column:2/-1;padding:10px 12px 12px;background:var(--sink);border-bottom:1px solid var(--line)}
-.g-main.sh .detail{grid-column:3/-1}
+.detail{grid-column:1/-1;padding:10px 12px 12px;background:var(--sink);border-bottom:1px solid var(--line)}
 .dsec{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin:0 0 5px}
 .dsec.second{margin-top:13px}
 .line{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:5px 9px;background:var(--panel);
@@ -347,11 +378,22 @@ tr.skip td{opacity:.45}
 #tip{position:fixed;z-index:100;background:#0e1013;color:var(--txt);border:1px solid var(--edge);
   border-radius:5px;padding:5px 9px;font-size:12px;pointer-events:none;max-width:290px;
   box-shadow:0 8px 22px rgba(0,0,0,.5)}
+#netbar{position:sticky;top:var(--hh);z-index:26;display:flex;align-items:center;gap:8px;
+  padding:4px 12px;background:hsl(38 34% 16%);color:var(--warn);
+  border-bottom:1px solid hsl(38 30% 26%);font-size:12px}
+#netbar b{color:var(--txt);font-weight:600}
 #toast{position:fixed;right:16px;bottom:16px;background:var(--panel2);border:1px solid var(--edge);
   padding:10px 16px;border-radius:var(--r);z-index:90;max-width:360px;font-size:13px;
   box-shadow:0 10px 30px rgba(0,0,0,.45)}
 #toast.error{border-color:var(--danger)}
 
+/* Між телефоном і повною сіткою був провал: дев'ять колонок не влазили, і
+   сторінка їхала вбік. На середніх екранах ховаємо «Головний допуск» —
+   він і так дублюється в картці людини. */
+@media (max-width:1040px) and (min-width:721px){
+  .g-main .pos .t{max-width:340px}
+  .wrap .tables{min-width:0}
+}
 @media (max-width:1000px){
   main{padding:10px 8px 40px}
   .bar{margin:0 -8px 8px;padding:6px 8px}
@@ -364,9 +406,7 @@ tr.skip td{opacity:.45}
   .tabs .lb{display:none}
   .sum{width:100%;margin-left:0}
   .wrap{overflow-x:auto}
-  .wrap .g-main{min-width:960px}
-  .wrap .g-main.sh{min-width:1090px}
-  .wrap .g-rep.sh{min-width:900px}
+  .wrap .tables{min-width:0}
   .wrap .g-rep{min-width:800px}
   .wrap .g-out,.wrap .g-log{min-width:680px}
   .acts{opacity:1}
@@ -384,18 +424,24 @@ tr.skip td{opacity:.45}
   .bar{gap:6px;margin-bottom:6px}
   .bar .lbl{display:none}
   .search{max-width:none;min-width:0;flex:1}
+  /* на телефоні дій біля пошуку немає, тож він займає весь рядок */
+  .bar .mid{width:100%}
+  .bar .mid .search{width:100%}
   /* штатка й напрями — кожне своїм рядком, напрями гортаються */
-  header{padding:5px 6px}
-  header #fSheet{flex:1 1 100%;order:1}
-  header .seg{order:4;width:100%;min-width:0}
-  header .tabs{order:2} header .menu{order:3}
+  /* два ряди замість трьох: зверху штатка й напрями, знизу вкладки */
+  header{padding:4px 6px;gap:4px}
+  header #fSheet{flex:0 1 auto;max-width:46%;order:1}
+  header .seg{order:2;flex:1 1 auto;min-width:0}
+  header .tabs{order:3;width:100%;justify-content:space-between}
+  header .btn{order:4}
+  .bar{gap:5px}
   .seg{max-width:100%;overflow-x:auto;justify-content:flex-start;scrollbar-width:none}
   .seg::-webkit-scrollbar{display:none}
   .seg button{padding:4px 9px;font-size:12px;flex:none}
   /* телефон — режим перегляду: редагування, додавання, файли й дії в рядках приховані */
   .grp.desk{display:none}
+  .bar .mid .btn.desk{display:none}
   .macts .ico:not(.call){display:none}   /* дзвінок лишаємо — це перегляд, не правка */
-  .macts .exp{display:inline-flex}
   /* підсумок одним рядком, без коробок */
   .sum{border:0;gap:0;flex-wrap:wrap;width:100%;overflow:visible}
   .sum .cell{border:0;background:none;padding:1px 10px 1px 0;min-width:0;display:flex;
@@ -405,21 +451,26 @@ tr.skip td{opacity:.45}
   .sum .v{font-size:12px}
   /* таблиця вміщується в екран — без бічної прокрутки */
   .wrap{overflow:visible}
-  .wrap .g-main,.wrap .g-main.sh{min-width:0}
-  .g-main,.g-main.sh{grid-template-columns:minmax(64px,.4fr) minmax(0,1fr) auto}
-  .g-main .detail,.g-main.sh .detail{grid-column:2/-1}
-  .c{min-height:34px;padding:0 7px}
-  .c.unit{padding:6px 7px}
-  .m2{flex-direction:column;align-items:flex-start;justify-content:center;gap:0;padding:4px 7px}
+  .wrap .tables{min-width:0}
+  /* картковий звіт не має тягнути сторінку вшир */
+  .wrap .g-rep{min-width:0}
+  .rg{grid-template-columns:1fr}
+  .g-main{grid-template-columns:minmax(0,1fr) auto;width:100%}
+  .unitband{margin:8px 0 2px}
+  .g-main .pos .t,.g-main .nm{max-width:none}
+  .g-main .detail{grid-column:1/-1}
+  .tables{gap:10px}
+  .c{min-height:30px;padding:0 6px}
+  .m2{flex-direction:column;align-items:flex-start;justify-content:center;gap:0;padding:3px 6px}
   .m2 .l1{display:flex;align-items:center;gap:6px;width:100%;min-width:0}
   .m2 .l1 .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
   .m2 .l1 input.cell{padding:2px 0;border:0}
-  .m2 .l2{font-size:11px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;
-    white-space:nowrap;width:100%}
-  .m2 .rk{width:auto;height:20px;flex:none}
-  .m2 .rk>svg{width:20px;height:20px}
+  .m2 .l2{font-size:10.5px;line-height:1.3;color:var(--faint);overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap;width:100%}
+  .m2 .rk{width:auto;height:21px;flex:none}
+  .m2 .rk>svg{width:17px;height:21px}
   .macts{display:flex;align-items:center;padding:0 2px 0 0}
-  .macts .ico{width:26px;height:26px}
+  .macts .ico{width:24px;height:24px}
   dialog,dialog.wide{min-width:0;width:96vw}
   dialog form{padding:12px}
 }
@@ -432,6 +483,12 @@ tr.skip td{opacity:.45}
   <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
   <symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 5h18l-7 8.2V20l-4 1.6v-8.4z"/></symbol>
   <symbol id="i-move" viewBox="0 0 24 24"><path d="M16 4l4 4-4 4"/><path d="M20 8H5"/><path d="M8 14l-4 4 4 4"/><path d="M4 18h15"/></symbol>
+  <symbol id="i-import" viewBox="0 0 24 24"><path d="M12 3v11"/><path d="m8 10 4 4 4-4"/>
+    <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3v13"/><path d="m8 7 4-4 4 4"/>
+    <path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/>
+    <path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></symbol>
   <symbol id="i-off" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v8"/><path d="m8.5 12.5 3.5 3.5 3.5-3.5"/></symbol>
   <symbol id="i-out" viewBox="0 0 24 24"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="m9 8-4 4 4 4"/><path d="M5 12h10"/></symbol>
   <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6.5 7l.9 12a2 2 0 0 0 2 1.9h5.2a2 2 0 0 0 2-1.9L17.5 7"/><path d="M9.5 7V5.2a1.2 1.2 0 0 1 1.2-1.2h2.6a1.2 1.2 0 0 1 1.2 1.2V7"/></symbol>
@@ -462,9 +519,9 @@ tr.skip td{opacity:.45}
 </div>
 
 <header>
-  <div class="seg" id="dirSeg" aria-label="Штат"></div>
-  <select id="fSheet" onchange="setSheet(this.value)" aria-label="Штатка"></select>
-  <button class="btn" id="renSheet" onclick="renameSheet()" data-tip="Перейменувати штатку"
+  <span class="grow"></span>
+  <div class="seg" id="sheetSeg" aria-label="Штатка"></div>
+  <button class="btn ico2" id="renSheet" onclick="renameSheet()" data-tip="Перейменувати штатку"
     ><svg class="i"><use href="#i-edit"/></svg></button>
   <span class="grow"></span>
   <nav class="tabs">
@@ -477,9 +534,10 @@ tr.skip td{opacity:.45}
     <button id="tabL" onclick="showTab('l')">
       <svg class="i"><use href="#i-log"/></svg><span class="lb">Журнал</span></button>
   </nav>
-  <button class="btn danger-ghost" onclick="openReset()" data-tip="Скинути дані"
+  <span class="hsep"></span>
+  <button class="btn ico2 danger-ghost" onclick="openReset()" data-tip="Скинути дані"
     ><svg class="i"><use href="#i-trash"/></svg></button>
-  <button class="btn" onclick="logout()" data-tip="Вийти"
+  <button class="btn ico2" onclick="logout()" data-tip="Вийти"
     ><svg class="i"><use href="#i-out"/></svg></button>
 </header>
 
@@ -487,41 +545,34 @@ tr.skip td{opacity:.45}
   <!-- Склад: штатні + позаштатні -->
   <section id="viewC">
     <div class="bar">
-      <div class="grp desk">
-        <button class="btn" id="editBtn" onclick="toggleEdit()" aria-pressed="false"
-          data-tip="Редагування полів"><svg class="i"><use href="#i-edit"/></svg></button>
-        <button class="btn" onclick="openNewExtra()" data-tip="Додати позаштатного"
-          ><svg class="i"><use href="#i-adduser"/></svg></button>
-        <button class="btn" onclick="openMass()" data-tip="Відсутність для виділених"
-          ><svg class="i"><use href="#i-off"/></svg></button>
-        <button class="btn" onclick="openOut()" data-tip="Копіювати або експортувати"
-          ><svg class="i"><use href="#i-copy"/></svg></button>
-        <select id="fCase" onchange="setCase()" data-tip="Відмінок ПІБ і звань"></select>
-        <button class="btn" id="initBtn" onclick="toggleInitials()" aria-pressed="false"
-          data-tip="Лише ініціали: Іваненко І. І.">І.&nbsp;І.</button>
+      <div class="grp desk start">
         <span class="selnote" id="selNote" hidden></span>
       </div>
-      <label class="search">
-        <svg class="i"><use href="#i-search"/></svg>
-        <input type="search" id="fSearch" placeholder="Пошук…" oninput="renderAll()">
-        <button class="sopt" id="soptBtn" onclick="toggleSopt(event)" data-tip="Опції пошуку">Aa</button>
-      </label>
+      <div class="mid">
+        <button class="btn ico2 desk" onclick="openNew()" data-tip="Додати людину"
+          ><svg class="i"><use href="#i-plus"/></svg></button>
+        <button class="btn ico2 desk" id="massBtn" onclick="openMass()" disabled
+          data-tip="Відсутність для виділених"><svg class="i"><use href="#i-cal"/></svg></button>
+        <label class="search">
+          <svg class="i"><use href="#i-search"/></svg>
+          <input type="search" id="fSearch" placeholder="Пошук…" oninput="renderAll()">
+          <button class="sopt" id="soptBtn" onclick="toggleSopt(event)" data-tip="Опції пошуку">Aa</button>
+        </label>
+        <button class="btn ico2 desk" onclick="openImport()" data-tip="Імпорт таблиці"
+          ><svg class="i"><use href="#i-import"/></svg></button>
+        <button class="btn ico2 desk" onclick="openOut()" data-tip="Поділитися: копія або файл"
+          ><svg class="i"><use href="#i-share"/></svg></button>
+      </div>
       <div class="grp end">
         <button class="btn" id="fClear" onclick="clearFilters()" hidden>Скинути</button>
-        <span class="desk grp">
-          <button class="btn" onclick="openImport()" data-tip="Імпорт таблиці"
-            ><svg class="i"><use href="#i-up"/></svg></button>
-          <button class="btn" onclick="openOut()" data-tip="Експорт із прев'ю"
-            ><svg class="i"><use href="#i-down"/></svg></button>
-        </span>
       </div>
     </div>
-    <div class="wrap"><div class="grid g-main" id="gMain"></div></div>
+    <div class="wrap"><div class="tables" id="gMain"></div></div>
   </section>
 
   <!-- Звіт -->
   <section id="viewR" hidden>
-    <div class="bar">
+    <div class="bar plain">
       <span class="small dim" id="repNote"></span>
       <span class="grow"></span>
       <button class="btn" onclick="exportReport()"><svg class="i"><use href="#i-down"/></svg>Звіт у XLSX</button>
@@ -567,8 +618,22 @@ tr.skip td{opacity:.45}
   <form method="dialog" onsubmit="return saveMove(event)">
     <h2 id="moveTitle">Переміщення</h2>
     <p class="small dim" id="moveWho" style="margin:0 0 12px"></p>
-    <div class="field"><label>Цільова посада</label>
-      <select id="mPost" required onchange="moveTarget()"></select></div>
+    <div class="field"><label>Куди</label>
+      <div class="seg pick">
+        <button type="button" id="mAsPost" onclick="moveKind('post')">На штатну посаду</button>
+        <button type="button" id="mAsFree" onclick="moveKind('free')">Своя посада (позаштат)</button>
+      </div>
+    </div>
+    <div class="field" id="mPostWrap"><label>Цільова посада</label>
+      <select id="mPost" onchange="moveTarget()"></select></div>
+    <div id="mFreeWrap">
+      <div class="two">
+        <div class="field"><label>Підрозділ</label>
+          <input id="mUnit" autocomplete="off" list="unitList"></div>
+        <div class="field"><label>Посада</label><input id="mPos" autocomplete="off"
+          placeholder="як записати"></div>
+      </div>
+    </div>
     <div id="mSwap" hidden>
       <div class="field"><label id="mOccLabel"></label>
         <label class="chk blk"><input type="radio" name="disp" value="swap" id="mDispSwap"
@@ -584,14 +649,27 @@ tr.skip td{opacity:.45}
 </dialog>
 
 <dialog id="dlgNew">
-  <form method="dialog" onsubmit="return saveNewExtra(event)">
-    <h2>Новий позаштатний</h2>
+  <form method="dialog" onsubmit="return saveNew(event)">
+    <h2>Нова людина</h2>
     <div class="field"><label>ПІБ</label><input id="nPib" required autocomplete="off"></div>
     <div class="two">
       <div class="field"><label>Звання</label><select id="nRank"></select></div>
-      <div class="field"><label>Підрозділ</label><input id="nUnit" autocomplete="off" list="unitList"></div>
+      <div class="field"><label>Телефон</label><input id="nPhone" type="tel" placeholder="+380…"></div>
     </div>
-    <div class="field"><label>Посада (вільний текст)</label><input id="nPos" autocomplete="off"></div>
+    <div class="field"><label>Куди</label>
+      <div class="seg pick">
+        <button type="button" id="nAsStaff" onclick="newKind('staff')">На штатну посаду</button>
+        <button type="button" id="nAsExtra" onclick="newKind('extra')">Позаштатний</button>
+      </div>
+    </div>
+    <div class="field" id="nStaffWrap"><label>Вакантна посада</label>
+      <select id="nPost"></select></div>
+    <div id="nExtraWrap">
+      <div class="two">
+        <div class="field"><label>Підрозділ</label><input id="nUnit" autocomplete="off" list="unitList"></div>
+        <div class="field"><label>Посада (вільний текст)</label><input id="nPos" autocomplete="off"></div>
+      </div>
+    </div>
     <datalist id="unitList"></datalist>
     <div class="foot"><button type="button" class="btn" onclick="dlgNew.close()">Скасувати</button>
       <span class="grow"></span><button class="btn primary">Додати</button></div>
@@ -603,7 +681,7 @@ tr.skip td{opacity:.45}
     <h2 id="askTitle"></h2>
     <div class="small" id="askBody" style="margin:0 0 12px"></div>
     <input id="askInput" autocomplete="off" hidden>
-    <div class="foot"><button type="button" class="btn" onclick="dlgAsk.close()">Скасувати</button>
+    <div class="foot"><button type="button" class="btn" onclick="askDone(null)">Скасувати</button>
       <span class="grow"></span><button class="btn primary" id="askOk">Так</button></div>
   </form>
 </dialog>
@@ -671,11 +749,18 @@ tr.skip td{opacity:.45}
   <form method="dialog" onsubmit="return false">
     <h2 id="cardWho">Картка</h2>
     <p class="hintline" id="cardSub"></p>
-    <div class="pform" style="grid-template-columns:220px 1fr;margin-bottom:10px">
+    <div class="pform cardtop">
+      <label class="wide2">ПІБ<input id="cardPib" autocomplete="off"
+        onchange="cardSave('pib', this)"></label>
+      <label>Звання<select id="cardRank" onchange="cardSave('rank', this)"></select></label>
       <label>Телефон<input id="cardPhone" type="tel" placeholder="+380…"
-        onchange="cardSavePhone()"></label>
-      <span></span>
+        onchange="cardSave('phone', this)"></label>
+      <label id="cardUnitWrap">Підрозділ<input id="cardUnit" list="unitList"
+        autocomplete="off" onchange="cardSave('unit', this)"></label>
+      <label id="cardPosWrap">Посада<input id="cardPos" autocomplete="off"
+        onchange="cardSave('position', this)"></label>
     </div>
+    <div class="cardacts" id="cardActs"></div>
     <div class="panes">
       <section class="pane">
         <h3>Допуски</h3>
@@ -751,15 +836,26 @@ tr.skip td{opacity:.45}
   </form>
 </dialog>
 
+<div id="netbar" hidden></div>
 <div id="toast" hidden></div>
 
 <script>
 /* ================= КОНФІГ ================= */
-const TAGS = ['МРТ','РЕБ','FPV','Крило','Бомбер','Перехоплювачі','Сапер'];
+const TAGS = ['МРТ','РЕБ','РЛС','FPV','Крило','Бомбер','Перехоплювачі','Сапер'];
 const CERT_BASE = {'Перехоплювачі':700,'FPV':500,'Бомбер':400,'Крило':300,'МРТ':200,'РЕБ':150,'Сапер':140};
 const LEVEL_LABELS = {'FPV':{2:'оптика'}};
-const HUE = {'МРТ':212,'РЕБ':2,'FPV':38,'Крило':172,'Бомбер':272,'Перехоплювачі':142,'Сапер':22};
-const hueOf = t => HUE[t] ?? 210;
+const HUE = {'МРТ':212,'РЕБ':2,'РЛС':190,'FPV':38,'Крило':170,
+             'Бомбер':272,'Перехоплювачі':140,'Сапер':30};
+/* Напрям, якого ще немає в списку, теж має отримати свій колір, інакше всі нові
+   зіллються в один. Беремо з назви — відтінок стабільний між сеансами. */
+const SPARE = [96, 320, 258, 46, 232, 12, 288, 128];
+function hueOf(t){
+  if(HUE[t] != null) return HUE[t];
+  if(!t) return 210;
+  let h = 0;
+  for(const ch of t) h = (h * 31 + ch.codePointAt(0)) % 9973;
+  return SPARE[h % SPARE.length];
+}
 
 // Види відсутності: код лишається в базі, назву можна міняти без міграції.
 const ABSENCE = [
@@ -902,8 +998,17 @@ function activeAbsence(p){
 /* ================= API ================= */
 let KEY = localStorage.getItem('apiKey') || '';
 async function api(path, opts={}){
-  const r = await fetch('/api/'+path, {...opts,
-    headers:{'Content-Type':'application/json','X-API-Key':KEY, ...(opts.headers||{})}});
+  const write = opts.method && opts.method !== 'GET';
+  if(write && !ONLINE) throw new Error('Немає звʼязку — зміни не збережуться');
+  let r;
+  try{
+    r = await fetch('/api/'+path, {...opts,
+      headers:{'Content-Type':'application/json','X-API-Key':KEY, ...(opts.headers||{})}});
+  }catch(err){
+    setOnline(false);                 // мережі немає — не плутаємо з помилкою сервера
+    throw new Error('Немає звʼязку із сервером');
+  }
+  setOnline(true);
   if(r.status===401){ logout(); throw new Error('невірний ключ'); }
   const data = await r.json().catch(()=>({}));
   if(!r.ok) throw new Error(data.error||('HTTP '+r.status));
@@ -919,9 +1024,24 @@ keyInput.addEventListener('keydown',e=>{ if(e.key==='Enter') tryLogin(); });
 
 /* ================= СТАН ================= */
 let POSTS=[], PERSONS=[], LOGS=[], TAB='c';
-const savedDir = localStorage.getItem('dir');
-let DIR = savedDir === null ? 'МРТ' : savedDir;   // типово показуємо штат МРТ
-let SHEET = localStorage.getItem('sheet') || '';        // '' = усі штатки
+/* Напрями — набір прапорців, а не один вибір: штатний РЕБ буває позаштатним
+   МРТ, тож дивитись на два одразу треба часто. Порожній набір = усі. */
+function readDirs(){
+  const raw = localStorage.getItem('dir');
+  if(raw === null) return new Set(['МРТ']);            // типово показуємо МРТ
+  if(raw.startsWith('[')){
+    try{ return new Set(JSON.parse(raw)); }catch(_){ return new Set(); }
+  }
+  return new Set(raw ? [raw] : []);                    // старий формат: один рядок
+}
+const DIRS = readDirs();
+const saveDirs = () => localStorage.setItem('dir', JSON.stringify([...DIRS]));
+const anyDir = () => DIRS.size > 0;
+const dirOn = tag => DIRS.size === 0 || DIRS.has(tag);
+const dirLabel = () => [...DIRS].join('/');
+/* Показуємо завжди одну штатку: «разом» плутало підсумки й ширину колонок.
+   null означає «ще не обрано» — перша штатка стане поточною при завантаженні. */
+let SHEET = localStorage.getItem('sheet');
 const $ = id => document.getElementById(id);
 const esc = s => (s??'').toString().replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const active = p => p.status==='active';
@@ -933,6 +1053,11 @@ const icon = n => `<svg class="i"><use href="#i-${n}"/></svg>`;
 // На телефоні колонки не вміщуються, а колір рядка й так каже про напрям —
 // лишаємо підрозділ, ПІБ (з посадою дрібним) і дії.
 const MOB = () => innerWidth <= 720;
+/* Між телефоном і повною сіткою всі колонки не влазять: там ховаємо «Головний
+   допуск» — він і так є в картці людини. Ховаємо саме в розмітці, бо ширини
+   задаються інлайном і css їх уже не перебʼє. */
+const NARROW = () => !MOB() && innerWidth <= 1040;
+const band = () => MOB() ? 'm' : NARROW() ? 'n' : 'w';
 const NO_UNIT = '— без підрозділу —';
 const MAIN_SHEET = 'Основна';
 const EXTRA_TAG = 'позаштат';
@@ -941,8 +1066,9 @@ const sheetName = s => s || MAIN_SHEET;
 // Фільтри колонок: Set = перелік значень, рядок = підрядок
 const F = {sheet:new Set(), unit:new Set(), tag:new Set(), rank:new Set(), state:new Set(),
            cert:new Set(), position:'', pib:''};
+/* band — фільтрується, але показується смугою над своїми рядками, а не колонкою */
 const COLS = [
-  {k:'unit',     t:'Підрозділ',       kind:'enum'},
+  {k:'unit',     t:'Підрозділ',       kind:'enum', band:true},
   {k:'tag',      t:'Штат',            kind:'enum'},
   {k:'position', t:'Посада',          kind:'text'},
   {k:'rank',     t:'в/з',             kind:'enum'},
@@ -950,35 +1076,42 @@ const COLS = [
   {k:'state',    t:'Наявність',       kind:'enum'},
   {k:'cert',     t:'Головний допуск', kind:'enum'},
   {k:'',         t:''},
-  {k:'',         t:''},
 ];
-// «Разом»: штатку не обрано і їх більше однієї — тоді зліва зʼявляється
-// злитий стовпчик «Тип підрозділу»
-const combined = () => !SHEET && sheets().length > 1;
 // між підрозділом і штатом — вузька колонка з галочками виділення
-const cols = () => {
-  const base = [COLS[0], {k:'__sel', t:''}, ...COLS.slice(1)];
-  return combined() ? [{k:'sheet', t:'Тип підрозділу', kind:'enum'}, ...base] : base;
-};
+const cols = () => COLS.filter(c=>!c.band && !(c.k==='cert' && NARROW()));
 /* Пошук: підрядок, ціле слово або регулярний вираз, з урахуванням регістру чи без.
    Для «цілого слова» \b не годиться — він знає лише латиницю, тож межу
    визначаємо через сусідні символи з класів букв/цифр Unicode. */
 const SOPT = {case:false, word:false, re:false};
-// Відмінок і формат ПІБ застосовуються прямо в таблиці, а не в окремому вікні.
-let CASE = localStorage.getItem('case') || 'nom';        // типово називний
-let INITIALS = localStorage.getItem('initials') === '1';
-function setCase(){
-  CASE = $('fCase').value;
-  localStorage.setItem('case', CASE);
-  renderAll();
+/* У таблиці ПІБ завжди в називному й повністю: відмінок та ініціали потрібні
+   тільки в тому, що вивантажують, і живуть у вікні «Поділитися».
+   На телефоні місця обмаль, тож там показуємо ініціали. */
+const CASE = 'nom';
+const INITIALS = MOB();
+/* Номер показуємо звично: 0671231212. У базі він лежить у міжнародному
+   вигляді, бо звідти ж і посилання на дзвінок та WhatsApp. */
+function phoneLocal(v){
+  const d = String(v||'').replace(/\D/g,'');
+  if(d.length === 12 && d.startsWith('380')) return '0' + d.slice(3);
+  if(d.length === 10 && d.startsWith('0')) return d;
+  if(d.length === 9) return '0' + d;
+  return v || '';
 }
-function toggleInitials(){
-  INITIALS = !INITIALS;
-  localStorage.setItem('initials', INITIALS ? '1' : '0');
-  $('initBtn').setAttribute('aria-pressed', INITIALS ? 'true' : 'false');
-  renderAll();
+const phoneIntl = v => {
+  const d = String(v||'').replace(/\D/g,'');
+  if(d.length === 12 && d.startsWith('380')) return d;
+  if(d.length === 10 && d.startsWith('0')) return '38' + d;
+  if(d.length === 9) return '380' + d;
+  return d;
+};
+/* Звичайне tel:-посилання: свій список дій тут зайвий — система й так
+   пропонує подзвонити, написати, скопіювати чи зберегти в контакти. */
+function phoneCell(p){
+  return p && p.phone
+    ? `<a class="ph mono" href="tel:+${esc(phoneIntl(p.phone))}"
+        >${esc(phoneLocal(p.phone))}</a>`
+    : '';
 }
-// Як показувати людину в таблиці й у вивантаженнях.
 const showPIB  = pib  => declPIB(pib, CASE, INITIALS ? 'init' : 'full');
 const showRank = rank => rank ? declRank(normRank(rank) || rank, CASE) : '';
 function makeMatcher(q){
@@ -1006,9 +1139,54 @@ function toast(msg, isErr){
   t.textContent = msg; t.classList.toggle('error', !!isErr); t.hidden = false;
   clearTimeout(toastT); toastT = setTimeout(()=>t.hidden=true, isErr?6000:3000);
 }
-async function boot(){ try{ await reload(); }catch(e){ toast(e.message, true); } }
+/* Кеш у localStorage: список видно одразу, навіть без мережі. Поки звʼязку
+   немає — лише читання, бо надіслати зміну однаково нікуди. */
+const CACHE_KEY = 'cache:v1';
+let ONLINE = true, CACHE_TS = 0;
+
+function saveCache(){
+  try{
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ts: Date.now(), posts: POSTS, persons: PERSONS}));
+  }catch(_){}                       // переповнення сховища — не привід падати
+}
+function readCache(){
+  try{
+    const c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+    return c && Array.isArray(c.posts) && Array.isArray(c.persons) ? c : null;
+  }catch(_){ return null; }
+}
+function setOnline(v){
+  if(ONLINE === v) return;
+  ONLINE = v;
+  paintNet();
+  renderAll();
+}
+function paintNet(){
+  const bar = $('netbar');
+  bar.hidden = ONLINE;
+  if(ONLINE) return;
+  const when = CACHE_TS ? new Date(CACHE_TS).toLocaleString('uk-UA') : 'невідомо коли';
+  bar.innerHTML = `<svg class="i"><use href="#i-off"/></svg>
+    Немає звʼязку — показано збережений список <b>станом на ${esc(when)}</b>. Редагування вимкнено.`;
+  measureChrome();
+}
+
+async function boot(){
+  const c = readCache();
+  if(c){                              // спершу малюємо кеш, щоб не чекати мережу
+    POSTS = c.posts; PERSONS = c.persons; CACHE_TS = c.ts;
+    fillScope(); renderAll();
+  }
+  try{ await reload(); }
+  catch(e){
+    if(!c) toast(e.message, true);
+    paintNet();
+  }
+}
 async function reload(){
   [POSTS, PERSONS] = await Promise.all([api('posts'), api('persons')]);
+  CACHE_TS = Date.now();
+  saveCache();
   fillScope(); renderAll();
 }
 
@@ -1020,12 +1198,24 @@ function showTab(t){
     $('tab'+k.toUpperCase()).classList.toggle('on', t===k);
   }
   const scoped = (t==='c'||t==='r');            // штатка й напрям стосуються складу і звіту
-  $('fSheet').hidden = !scoped; $('dirSeg').hidden = !scoped;
+  $('sheetSeg').hidden = !scoped || sheets().length < 2;
   if(t!=='c') clearSel();   // штатка й напрям стосуються складу і звіту
   if(t==='l') loadLog(); else renderAll();
   measureChrome();
 }
-function setDir(t){ DIR=t; localStorage.setItem('dir',t); renderDirSeg(); renderAll(); }
+function toggleDir(t){
+  DIRS.has(t) ? DIRS.delete(t) : DIRS.add(t);
+  saveDirs(); renderDirSeg(); renderAll();
+  // Вікно лишається відкритим: напрямів кілька, і їх вибирають за один захід.
+}
+/* Типово напрям лише підсвічує: сховати РЕБ, коли дивишся МРТ, потрібно рідко,
+   а от бачити всіх і розрізняти кольором — постійно. */
+let DIRONLYHI = localStorage.getItem('dirhi') !== '0';
+function toggleDirHi(v){
+  DIRONLYHI = v;
+  localStorage.setItem('dirhi', v ? '1' : '0');
+  renderAll();
+}
 async function renameSheet(){
   const cur = SHEET;
   const name = await ask({title:'Назва штатки', ok:'Перейменувати', input:true,
@@ -1038,7 +1228,7 @@ async function renameSheet(){
       body:JSON.stringify({from:cur, to:name.trim()})});
     SHEET = name.trim(); localStorage.setItem('sheet', SHEET);
     await reload();
-    toast(`Перейменовано, посад: ${r.posts}`);
+    toast(r.posts ? `Перейменовано, посад: ${r.posts}` : 'Жодної посади не змінено', !r.posts);
   }catch(e){ toast(e.message, true); }
 }
 function setSheet(s){ SHEET=s; localStorage.setItem('sheet',s); fillScope(); renderAll(); }
@@ -1067,38 +1257,36 @@ document.addEventListener('mouseout', e=>{
   if(!e.relatedTarget || !e.relatedTarget.closest || !e.relatedTarget.closest('[data-tip]')) hideTip();
 });
 addEventListener('scroll', hideTip, true);
-// розкладка рядка різна для телефона й десктопа — стежимо за перетином межі
-let wasMob = MOB();
+addEventListener('offline', ()=>setOnline(false));
+addEventListener('online', ()=>{ setOnline(true); reload().catch(()=>setOnline(false)); });
+// Кількість колонок різна в трьох смугах ширини — перемальовуємо на переході.
+let wasBand = band();
 addEventListener('resize', ()=>{
   hideTip();
-  if(MOB() !== wasMob){ wasMob = MOB(); renderAll(); }
+  if(band() !== wasBand){ wasBand = band(); renderAll(); }
 });
 
-// Типово таблиця лише для читання: клік по клітинці виділяє рядок, а не ставить курсор.
-let EDIT = localStorage.getItem('edit') === '1';
-function applyEdit(){
-  $('gMain').classList.toggle('edit', EDIT);
-  const b = $('editBtn');
-  b.setAttribute('aria-pressed', EDIT ? 'true' : 'false');
-  b.dataset.tip = EDIT ? 'Вимкнути редагування полів' : 'Увімкнути редагування полів';
-}
-function toggleEdit(){
-  EDIT = !EDIT;
-  localStorage.setItem('edit', EDIT ? '1' : '0');
-  if(EDIT) clearSel();
-  applyEdit();
-}
+/* Окремого режиму редагування немає: таблиця показує, а правка людини живе
+   в її картці. Лишилась тільки ознака «немає звʼязку» — вона глушить дії. */
+const mainGrids = () => [...$('gMain').querySelectorAll('.g-main')];
+function applyOffline(){ document.body.classList.toggle('offline', !ONLINE); }
 /* Шапка й панель інструментів липкі. На вузьких екранах вони переносяться,
    тож висоту міряємо, а не хардкодимо — від неї залежить, де прилипає
    заголовок таблиці. */
+/* Спостерігач за розміром сам змінює розмір: запис у --hh/--bh зсуває липкі
+   елементи, ті знову смикають спостерігача. На телефоні це давало вічне
+   тремтіння на пару пікселів. Пишемо, тільки коли значення справді інше. */
+let lastHH = -1, lastBH = -1;
 function measureChrome(){
   const h = document.querySelector('header');
   const bar = [...document.querySelectorAll('.bar')].find(b=>b.offsetParent !== null);
+  const hh = Math.round(h ? h.offsetHeight : 44);
+  const bh = Math.round(bar ? bar.offsetHeight : 0);
   const st = document.documentElement.style;
-  st.setProperty('--hh', (h ? h.offsetHeight : 44)+'px');
-  st.setProperty('--bh', (bar ? bar.offsetHeight : 0)+'px');
+  if(hh !== lastHH){ lastHH = hh; st.setProperty('--hh', hh+'px'); }
+  if(bh !== lastBH){ lastBH = bh; st.setProperty('--bh', bh+'px'); }
 }
-const chromeRO = new ResizeObserver(measureChrome);
+const chromeRO = new ResizeObserver(()=>requestAnimationFrame(measureChrome));
 
 function toggleSopt(e){
   e.preventDefault(); e.stopPropagation();
@@ -1160,16 +1348,24 @@ document.addEventListener('keydown', e=>{
 async function loadLog(){ try{ LOGS = await api('log'); renderLog(); }catch(e){ toast(e.message,true); } }
 
 /* ================= ШТАТКИ І НАПРЯМИ ================= */
-const sheets = () => [...new Set(POSTS.map(p=>p.sheet||''))]
-  .sort((a,b)=>sheetName(a).localeCompare(sheetName(b),'uk'));
+/* Порядок заливання, а не за абеткою: першою залили основну штатку, з нею й
+   працюють щодня. Час створення лежить у перших байтах ObjectID, тож
+   найменший id штатки і є моментом, коли її залили. */
+const sheets = () => {
+  const first = new Map();
+  for(const p of POSTS){
+    const k = p.sheet || '';
+    if(!first.has(k) || p.id < first.get(k)) first.set(k, p.id);
+  }
+  return [...first.keys()].sort((a,b)=>first.get(a) < first.get(b) ? -1 : 1);
+};
 // Підрозділи обраної штатки: позаштатні кріпляться до тих самих підрозділів
 function sheetUnits(){
-  if(!SHEET) return null;
   return new Set(POSTS.filter(p=>(p.sheet||'')===SHEET).map(p=>p.unit||NO_UNIT));
 }
 // Позаштатний кріпиться до тієї штатки, у якій є посади його підрозділу.
 function primarySheet(unit){
-  const p = POSTS.find(x=>(x.unit||NO_UNIT)===unit && (!SHEET || (x.sheet||'')===SHEET));
+  const p = POSTS.find(x=>(x.unit||NO_UNIT)===unit && (x.sheet||'')===SHEET);
   return p ? (p.sheet||'') : '';
 }
 const gKey = (sheet, unit) => sheet+'\x00'+unit;
@@ -1180,7 +1376,7 @@ function groupsInOrder(){
     const k = gKey(sheet, unit);
     if(!seen.has(k)){ seen.add(k); out.push({sheet, unit}); }
   };
-  for(const p of POSTS) if(!SHEET || (p.sheet||'')===SHEET) add(p.sheet||'', p.unit||NO_UNIT);
+  for(const p of POSTS) if((p.sheet||'')===SHEET) add(p.sheet||'', p.unit||NO_UNIT);
   for(const p of extras()){
     const u = p.unit||NO_UNIT;
     if(su && !su.has(u)) continue;
@@ -1191,9 +1387,11 @@ function groupsInOrder(){
 function unitsInOrder(){ return [...new Set(groupsInOrder().map(g=>g.unit))]; }
 function fillScope(){
   const sh = sheets();
-  if(SHEET && !sh.includes(SHEET)) SHEET='';
-  $('fSheet').innerHTML = '<option value="">Разом (усі штатки)</option>'
-    + sh.map(s=>`<option value="${esc(s)}"${s===SHEET?' selected':''}>${esc(sheetName(s))}</option>`).join('');
+  if(!sh.includes(SHEET)) SHEET = sh[0] ?? '';
+  // Перемикач, а не список: штаток одиниці, і видно одразу, яка зараз відкрита.
+  $('sheetSeg').innerHTML = sh.map(x=>`<button class="${x===SHEET?'on':''}"
+      onclick="setSheet('${esc(x).replace(/'/g,"\\'")}')">${esc(sheetName(x))}</button>`).join('');
+  $('sheetSeg').hidden = sh.length < 2;
   // перемикач показуємо завжди — інакше не видно, що штаток може бути кілька
   $('sheetList').innerHTML = sh.filter(Boolean).map(s=>`<option>${esc(s)}</option>`).join('');
   $('renSheet').disabled = !POSTS.length;
@@ -1201,19 +1399,39 @@ function fillScope(){
   $('nRank').innerHTML = '<option value="">—</option>'+RANKS.map(r=>`<option>${esc(r.n)}</option>`).join('');
   renderDirSeg();
 }
-function renderDirSeg(){
-  const pool = POSTS.filter(p=>!SHEET || (p.sheet||'')===SHEET);
-  const present = [...new Set(pool.map(p=>p.tag).filter(Boolean))];
-  const ordered = TAGS.filter(t=>present.includes(t)).concat(present.filter(t=>!TAGS.includes(t)));
-  if(DIR && !ordered.includes(DIR)) DIR='';
-  $('dirSeg').innerHTML = `<button class="${DIR===''?'on':''}" onclick="setDir('')">Усі</button>`
-    + ordered.map(t=>`<button class="${DIR===t?'on tinted':''}" style="--h:${hueOf(t)}"
-        onclick="setDir('${esc(t)}')">${esc(t)}</button>`).join('');
-  $('fCase').innerHTML = CASES.map(x=>`<option value="${x.k}">${esc(x.n)}</option>`).join('');
-$('fCase').value = CASE;
-$('initBtn').setAttribute('aria-pressed', INITIALS ? 'true' : 'false');
-document.documentElement.style.setProperty('--dh', hueOf(DIR));
+// Напрями, які реально є в поточній штатці.
+function dirsPresent(){
+  const present = [...new Set(POSTS.filter(p=>(p.sheet||'')===SHEET)
+    .map(p=>p.tag).filter(Boolean))];
+  return TAGS.filter(t=>present.includes(t)).concat(present.filter(t=>!TAGS.includes(t)));
 }
+function renderDirSeg(){
+  const ordered = dirsPresent();
+  for(const t of [...DIRS]) if(!ordered.includes(t)) DIRS.delete(t);
+  document.documentElement.style.setProperty('--dh', hueOf([...DIRS][0]));
+}
+/* Вибір напряму — той самий випадний фільтр, що й в інших колонок, тільки
+   він не ховає рядки, а підсвічує обрані й перераховує підсумки під них. */
+function openDirFilter(ev){
+  ev.stopPropagation();
+  const pop = $('fpop');
+  if(fKey==='__dir' && !pop.hidden){ closeFilter(); return; }
+  fKey = '__dir';
+  const list = dirsPresent();
+  pop.innerHTML = list.map(t=>`<label class="ff"><input type="checkbox"
+      ${DIRS.has(t)?'checked':''} onchange="toggleDir('${esc(t)}')">
+      <span class="tagdot" style="--h:${hueOf(t)}"></span>${esc(t)}</label>`).join('')
+    + `<label class="ff sep2"><input type="checkbox" ${DIRONLYHI?'checked':''}
+        onchange="toggleDirHi(this.checked)">лише підсвітити, не ховати решту</label>`
+    + `<div class="ff" style="margin-top:8px">
+        <button class="btn" onclick="clearDirs()">Скинути</button>
+        <button class="btn primary" onclick="closeFilter()">Готово</button></div>`;
+  pop.hidden = false;
+  const r = ev.currentTarget.getBoundingClientRect();
+  pop.style.left = Math.max(6, Math.min(r.left, innerWidth-240))+'px';
+  pop.style.top = Math.min(r.bottom+4, innerHeight-100)+'px';
+}
+function clearDirs(){ DIRS.clear(); saveDirs(); renderDirSeg(); renderAll(); closeFilter(); }
 
 /* ================= МОДЕЛЬ РЯДКА ================= */
 // Один запис таблиці: або посада (з людиною чи вакантна), або позаштатний.
@@ -1234,7 +1452,7 @@ function mkEntry(post, person){
 function allEntries(){
   const su = sheetUnits(), out = [];
   for(const post of POSTS){
-    if(SHEET && (post.sheet||'')!==SHEET) continue;
+    if((post.sheet||'')!==SHEET) continue;
     out.push(mkEntry(post, occupant(post.id)));
   }
   for(const p of extras()){
@@ -1246,15 +1464,16 @@ function allEntries(){
   }
   return out;
 }
-const isStaff = e => !!(e.post && e.person && (!DIR || e.post.tag===DIR));
-const isHi = e => !!DIR && isStaff(e);
+const isStaff = e => !!(e.post && e.person && dirOn(e.post.tag));
 const facet = (e,k) => k==='tag' ? (e.tag===EXTRA_TAG ? 'позаштатні' : (e.tag||'без мітки'))
                      : k==='sheet' ? sheetName(e.sheet)
                      : k==='rank' ? (e.rank || e.rankRaw || '—')
                      : k==='cert' ? (e.cert || '—')
                      : (e[k] || '');
 function passFilters(e){
-  for(const c of cols()){
+  // Позаштатних напрям не стосується — вони не мають мітки штату.
+  if(!DIRONLYHI && anyDir() && e.post && !DIRS.has(e.post.tag||'')) return false;
+  for(const c of COLS){
     if(!c.k || !fActive(c.k)) continue;
     if(c.kind==='enum'){ if(!F[c.k].has(facet(e,c.k))) return false; }
     else if(!String(e[c.k]||'').toLowerCase().includes(F[c.k].toLowerCase())) return false;
@@ -1280,9 +1499,8 @@ function buildGroups(){
     const list = by.get(gKey(g.sheet, g.unit));
     if(!list) continue;
     const posts = POSTS.filter(p=>(p.sheet||'')===g.sheet
-      && (p.unit||NO_UNIT)===g.unit && (!DIR||p.tag===DIR));
-    const span = list.length;                 // картка відкривається вікном, рядків не додає
-    groups.push({...g, entries:list, span,
+      && (p.unit||NO_UNIT)===g.unit && dirOn(p.tag));
+    groups.push({...g, entries:list,
       total:posts.length, occ:posts.filter(p=>occupant(p.id)).length});
   }
   return groups;
@@ -1296,45 +1514,75 @@ function blocksOf(groups){
   }
   return order.map(s=>({sheet:s, groups:by.get(s)}));
 }
-function renderMain(){
-  const groups = buildGroups();
-  const sh = combined();
-  $('gMain').classList.toggle('sh', sh && !MOB());
-  const out = MOB() ? [] : [cols().map(hcell).join('')];
-  ORDER = []; RMAP = new Map();
-  for(const b of blocksOf(groups)){
-    // На телефоні окремої колонки штатки немає, тож розділяємо блоки смугою —
-    // інакше дві штатки з однаковими підрозділами читаються як одна.
-    if(sh && MOB()){
-      const posts = b.groups.reduce((n,g)=>n+g.total, 0);
-      const occ = b.groups.reduce((n,g)=>n+g.occ, 0);
-      out.push(`<div class="sheethead">${esc(sheetName(b.sheet))}
-        ${posts ? `<span class="q num">${occ}/${posts}${DIR?' '+esc(DIR):''}</span>` : ''}</div>`);
-    }
-    if(sh && !MOB()){
-      const span = b.groups.reduce((n,g)=>n+g.span, 0);
-      const posts = b.groups.reduce((n,g)=>n+g.total, 0);
-      const occ = b.groups.reduce((n,g)=>n+g.occ, 0);
-      const to = ORDER.length + b.groups.reduce((n,g)=>n+g.entries.length, 0) - 1;
-      out.push(`<div class="c sheetcell" style="grid-row:span ${span}"
-        data-range="${ORDER.length},${to}">
-        ${esc(sheetName(b.sheet))}
-        ${posts ? `<div class="q num">${occ}/${posts}${DIR?' '+esc(DIR):''}</div>` : ''}
-      </div>`);
-    }
-    for(const g of b.groups){
-      const gFrom = ORDER.length, gTo = gFrom + g.entries.length - 1;
-      out.push(`<div class="c unit" style="grid-row:span ${g.span}" data-range="${gFrom},${gTo}">
-        <div class="u">${esc(g.unit)}</div>
-        ${g.total ? `<div class="q num">${g.occ}/${g.total}${DIR?' '+esc(DIR):''}</div>` : ''}
-      </div>`);
-      for(const e of g.entries){
-        const k = rowKey(e);
-        RMAP.set(k, e); ORDER.push(k);
-        out.push(rowHtml(e, k, ORDER.length-1));
-      }
+/* Одна штатка — одна таблиця. Раніше всі йшли однією сіткою, розділені лише
+   смугою, і читалися як один список; тепер у кожної власна шапка. */
+function tableHtml(b, named){
+  const body = MOB() ? [] : [cols().map(hcell).join('')];
+  for(const g of b.groups){
+    const gFrom = ORDER.length, gTo = gFrom + g.entries.length - 1;
+    const q = g.total ? `${g.occ}/${g.total}${anyDir()?' '+esc(dirLabel()):''}` : '';
+    // Смугою, а не колонкою: злитий стовпчик зліва з'їдав ширину й не давав
+    // оку зачепитися за межу між підрозділами.
+    // Лійка тут же, у чіпі: власної колонки в підрозділу немає, а фільтрувати
+    // хочеться саме звідси, дивлячись на назву.
+    body.push(`<div class="unitband"><span class="uchip${fActive('unit')?' on':''}">
+      ${esc(g.unit)}${q ? `<span class="q num">${q}</span>` : ''}
+      <button class="ufilt" data-tip="Фільтр за підрозділом"
+        onclick="openFilter(event,'unit')">${icon('filter')}</button></span></div>`);
+    for(const e of g.entries){
+      const k = rowKey(e);
+      RMAP.set(k, e); ORDER.push(k);
+      body.push(rowHtml(e, k, ORDER.length-1));
     }
   }
+  return `<section class="tbl"><div class="grid g-main">${body.join('')}</div></section>`;
+}
+/* Ширину колонки задає найдовше значення в усіх даних, а не в тому, що зараз
+   на екрані. Інакше кожен пошук і кожне перемикання штатки зсували таблицю.
+   Перераховуємо лише коли змінилася кількість посад чи людей. */
+let COLW = '', COLWKEY = '';
+const measureCtx = document.createElement('canvas').getContext('2d');
+function textW(str, font){
+  measureCtx.font = font;
+  return measureCtx.measureText(str || '').width;
+}
+const F13 = '13px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
+const F12 = '12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
+const FH  = '600 11.5px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
+const FM  = '13px ui-monospace,"Cascadia Mono","JetBrains Mono",Consolas,monospace';
+const FMS = '12px ui-monospace,"Cascadia Mono","JetBrains Mono",Consolas,monospace';
+
+function colTemplate(){
+  const key = POSTS.length + '/' + PERSONS.length + '/' + band();
+  if(key === COLWKEY && COLW) return COLW;
+  const pad = 2 * 8 + 2;                       // .c має padding:0 var(--cx)
+  const wide = (arr, font) => arr.reduce((m,x)=>Math.max(m, textW(x, font)), 0);
+  /* Заголовок ширший за свій підпис: у ньому ще чіп із числом і, де є, лійка
+     фільтра. Не врахувати їх — і назва колонки обріжеться на «Ш…». */
+  const head = (t, chip, funnel) =>
+    textW(t, FH) + 18 + (chip ? 26 : 0) + (funnel ? 17 : 0);
+
+  const tag = Math.max(head('Штат', true, true),
+    wide(POSTS.map(p=>p.tag||''), FH) + pad);
+  const pos = Math.max(head('Посада', true, false),
+    wide(POSTS.map(p=>p.position).concat(PERSONS.map(p=>p.position||'')), F13) + pad);
+  const pib = Math.max(head('ПІБ', true, false),
+    wide(PERSONS.map(p=>p.pib||''), FM) + wide(PERSONS.map(p=>phoneLocal(p.phone)), FMS) + pad + 8);
+  const state = head('Наявність', true, false);
+  const cert = Math.max(head('Головний допуск', false, false),
+    wide(PERSONS.map(p=>{ const c = mainCert(p); return c ? certLabel(c) : ''; }), F12) + pad);
+
+  const px = (v, lo, hi) => Math.round(Math.min(Math.max(v, lo), hi));
+  COLWKEY = key;
+  COLW = `${px(tag,84,140)}px minmax(0,${px(pos,150,460)}px) 46px `
+       + `minmax(0,${px(pib,170,420)}px) ${px(state,100,140)}px `
+       + (NARROW() ? '' : `minmax(0,${px(cert,110,220)}px) `) + '40px';
+  return COLW;
+}
+function renderMain(){
+  const groups = buildGroups();
+  ORDER = []; RMAP = new Map();
+  const out = blocksOf(groups).map(b => tableHtml(b, false));
   if(!groups.length){
     out.push(POSTS.length||PERSONS.length
       ? '<div class="empty">Нічого не знайдено за поточними фільтрами</div>'
@@ -1342,16 +1590,19 @@ function renderMain(){
          <button class="btn primary" onclick="openImport()">${icon('up')}Імпортувати таблицю</button></div>`);
   }
   $('gMain').innerHTML = out.join('');
+  // Ширини не залежать від фільтрів, тож ставимо їх однакові всім таблицям.
+  const tpl = MOB() ? '' : colTemplate();
+  for(const g of $('gMain').querySelectorAll('.g-main')) g.style.gridTemplateColumns = tpl;
   $('fClear').hidden = !anyFilter();
   $('fSearch').closest('.search').classList.toggle('bad', makeMatcher($('fSearch').value)==='bad');
   for(const k of [...SEL]) if(!RMAP.has(k)) SEL.delete(k);   // зникло після фільтра
-  applyEdit(); paintSel();
+  applyOffline(); paintSel();
 }
 // Підсумок живе в заголовках: число стоїть біля назви тієї колонки, якої стосується.
 function headStat(k){
   const t = reportTotals();
   const m = {
-    tag:      {v:t.shtat,   tip:'посад за штатом' + (DIR?' ('+DIR+')':'')},
+    tag:      {v:t.shtat,   tip:'посад за штатом' + (anyDir()?' ('+dirLabel()+')':'')},
     position: {v:t.vac,     tip:'вакантних посад', warn:false},
     pib:      {v:t.spysok,  tip:`за списком: ${t.shtatni} штатних + ${t.poza} позаштатних`},
     state:    {v:t.nayav,   tip:`в наявності (відсутніх: ${t.absent})`, warn:t.absent>0},
@@ -1360,51 +1611,54 @@ function headStat(k){
   return `<b class="hn${m.warn?' warn':''}" data-tip="${esc(m.tip)}">${m.v}</b>`;
 }
 function hcell(c){
-  if(c.k === '__sel'){
-    const n = SEL.size, all = ORDER.length && n === ORDER.length;
-    return `<div class="c h selcell" data-tip="Виділити всі показані"
-      onmousedown="toggleAll(event)"><span class="selbox${all?' on':(n?' some':'')}"></span></div>`;
-  }
   if(!c.k) return '<div class="c h"></div>';
+  if(c.k === 'tag'){        // «Штат» — вибір напрямів, а не звичайний перелік значень
+    return `<div class="c h"><button class="fh${anyDir()?' on':''}"
+      onclick="openDirFilter(event)"><span>${esc(c.t)}</span>${headStat(c.k)}
+      ${icon('filter')}</button></div>`;
+  }
+  // Колонка звань — ручка виділення, тож її заголовок бере всіх одразу.
+  if(c.k === 'rank'){
+    const all = ORDER.length && SEL.size === ORDER.length;
+    return `<div class="c h ctr selall${all?' on':(SEL.size?' some':'')}"
+      data-tip="Виділити всі показані" onmousedown="toggleAll(event)">${esc(c.t)}</div>`;
+  }
   const ctr = c.k==='rank' ? ' ctr' : '';       // заголовок над центрованою колонкою
   return `<div class="c h${ctr}"><button class="fh${fActive(c.k)?' on':''}"
     onclick="openFilter(event,'${c.k}')"><span>${esc(c.t)}</span>${headStat(c.k)}</button></div>`;
 }
-const kd = `onkeydown="if(event.key==='Enter')event.target.blur()"`;
-
 function rowHtmlMob(e, k, i){
   const {post, person:p} = e;
   const tag = post ? (post.tag||'') : '';
-  const hi = p ? isHi(e) : !!(DIR && tag && tag===DIR);
-  const cls = ['row', tag?'tint':'', hi?'on':'', (post&&!p)?'vac':'', e.abs?'away':'']
+  // Забарвлюємо тільки те, що зараз дивимось: невибрані напрями лишаються сірими.
+  const lit = !!(tag && anyDir() && DIRS.has(tag));
+  const cls = ['row', lit?'tint':'', lit&&p?'on':'', (post&&!p)?'vac':'', e.abs?'away':'']
     .filter(Boolean).join(' ');
   const attrs = ` style="--rh:${hueOf(tag)}" data-k="${k}" data-i="${i}"`;
   const sub = [post ? post.position : (p.position||''), e.abs ? absName(e.abs.kind) : '',
-               p && p.phone ? p.phone : ''].filter(Boolean).join(' · ');
+               p && p.phone ? phoneLocal(p.phone) : ''].filter(Boolean).join(' · ');
 
   if(post && !p){
-    return `<div class="${cls}"${attrs} onfocusout="vacantOut(event,'${post.id}')">
+    return `<div class="${cls}"${attrs}>
       <div class="c m2">
-        <div class="l1"><input class="cell in-pib mono" placeholder="вписати ПІБ" ${kd}></div>
+        <div class="l1"><span class="rk selcell"></span><button class="nm vac lnk"
+          onclick="openNew('${post.id}')">вакансія</button></div>
         <div class="l2">${esc(sub)}</div>
       </div>
-      <div class="c macts">
-        <input class="cell in-rank" hidden>
-        <button class="ico red" data-tip="Видалити посаду" onclick="delPost('${post.id}')">${icon('trash')}</button>
-      </div></div>`;
+      <div class="c macts"></div></div>`;
   }
   // На телефоні найкорисніша дія — подзвонити.
   const call = p.phone
     ? `<a class="ico call" href="tel:${esc(p.phone.replace(/[^\d+]/g,''))}"
          data-tip="Подзвонити ${esc(p.phone)}">${icon('phone')}</a>` : '';
-  const acts = call
-    + `<button class="ico" data-tip="Перемістити" onclick="openMove('${p.id}')">${icon('move')}</button>`;
+  const acts = call;
   return `<div class="${cls}"${attrs}>
     <div class="c m2">
-      <div class="l1">${rankFace(e)}<span class="nm mono">${esc(showPIB(p.pib))}</span></div>
+      <div class="l1">${rankFace(e)}<span class="nm mono lnk"
+        onclick="openCard('${p.id}')">${esc(showPIB(p.pib))}</span></div>
       <div class="l2">${esc(sub)}</div>
     </div>
-    <div class="c macts">${expBtn(p)}${acts}</div>
+    <div class="c macts">${acts}</div>
   </div>`;
 }
 function rowHtml(e, k, i){
@@ -1412,67 +1666,48 @@ function rowHtml(e, k, i){
   const dat = ` data-k="${k}" data-i="${i}"`;
   const {post, person:p} = e;
   const tag = post ? (post.tag||'') : '';
-  const hi = p ? isHi(e) : !!(DIR && tag && tag===DIR);
-  const cls = ['row', tag?'tint':'', hi?'on':'', (post&&!p)?'vac':'', e.abs?'away':'']
+  // Забарвлюємо тільки те, що зараз дивимось: невибрані напрями лишаються сірими.
+  const lit = !!(tag && anyDir() && DIRS.has(tag));
+  const cls = ['row', lit?'tint':'', lit&&p?'on':'', (post&&!p)?'vac':'', e.abs?'away':'']
     .filter(Boolean).join(' ');
   const hue = ` style="--rh:${hueOf(tag)}"`;   // відтінок рядка — за його ж міткою
 
   if(post && !p){
-    return `<div class="${cls}"${hue}${dat} onfocusout="vacantOut(event,'${post.id}')">
-      <div class="c selcell"><span class="selbox"></span></div>
+    return `<div class="${cls}"${hue}${dat}>
       ${tagCell(tag)}
       <div class="c pos"><span class="t">${esc(post.position)}</span></div>
-      <div class="c ctr"><input class="cell in-rank" placeholder="в/з" ${kd} style="text-align:center"></div>
-      <div class="c"><input class="cell in-pib mono" placeholder="вписати ПІБ" ${kd}></div>
-      <div class="c"><span class="chip vac">вакансія</span></div>
-      <div class="c"></div><div class="c ctr"></div>
-      <div class="c end"><div class="acts">
-        <button class="ico red" data-tip="Видалити посаду зі штатки"
-          onclick="delPost('${post.id}')">${icon('trash')}</button>
-      </div></div></div>`;
+      <div class="c ctr selcell"></div>
+      <div class="c"><button class="chip vac lnk" data-tip="Поставити людину на цю посаду"
+        onclick="openNew('${post.id}')">вакансія</button></div>
+      <div class="c"></div>${NARROW() ? '' : '<div class="c"></div>'}
+      <div class="c end"></div></div>`;
   }
-  const box = '<div class="c selcell"><span class="selbox"></span></div>';
   const head = post
-    ? `${box}${tagCell(tag)}<div class="c pos"><span class="t">${esc(post.position)}</span></div>`
-    : `${box}<div class="c"></div>
-       <div class="c pos"><input class="cell" value="${esc(p.position)}" placeholder="посада"
-         ${kd} onblur="saveField('${p.id}','position',this)"></div>`;
-  const acts = post
-    ? `<button class="ico" data-tip="Перемістити на іншу посаду" onclick="openMove('${p.id}')">${icon('move')}</button>
-       <button class="ico" data-tip="Зняти з посади у позаштат" onclick="toExtras('${p.id}')">${icon('off')}</button>
-       <button class="ico red" data-tip="Вибув" onclick="dismiss('${p.id}')">${icon('out')}</button>`
-    : `<button class="ico" data-tip="Призначити на штатну посаду" onclick="openMove('${p.id}')">${icon('move')}</button>
-       <button class="ico" data-tip="Змінити підрозділ" onclick="editUnit('${p.id}')">${icon('edit')}</button>
-       <button class="ico red" data-tip="Вибув" onclick="dismiss('${p.id}')">${icon('out')}</button>`;
-
+    ? `${tagCell(tag)}<div class="c pos"><span class="t">${esc(post.position)}</span></div>`
+    : `<div class="c"></div>
+       <div class="c pos"><span class="t">${esc(p.position)}</span></div>`;
   return `<div class="${cls}"${hue}${dat}>
     ${head}
     ${rankCell(p, e)}
-    <div class="c"><input class="cell mono" value="${esc(showPIB(p.pib))}" ${kd}
-      onblur="saveField('${p.id}','pib',this)"${CASE!=='nom'||INITIALS?' readonly':''}></div>
+    <div class="c pibcell"><span class="nm mono lnk"
+      onclick="openCard('${p.id}')">${esc(showPIB(p.pib))}</span>${phoneCell(p)}</div>
     <div class="c">${stateChip(e)}</div>
-    <div class="c">${certChip(p)}</div>
-    <div class="c ctr">${expBtn(p)}</div>
-    <div class="c end"><div class="acts">${acts}</div></div>
+    ${NARROW() ? '' : `<div class="c">${certChip(p)}</div>`}
+    <div class="c end"></div>
   </div>`;
 }
 // Порожній «Штат» = позаштатний: клітинку лишаємо порожньою, слово не пишемо.
 function tagCell(tag){
   return `<div class="c">${tag ? `<span class="chip tag">${esc(tag)}</span>` : ''}</div>`;
 }
-// Знак розрізнення + прихований select поверх: клік відкриває звичайний список звань
+// Знак розрізнення. Він же — єдина ручка виділення; звання міняється в картці.
 function rankFace(e){
   const known = e.rank, svg = known ? rankSvg(known) : '';
-  const p = e.person;
-  const unknown = !known && e.rankRaw ? `<option selected>${esc(e.rankRaw)}</option>` : '';
-  const opts = RANKS.map(r=>`<option${r.n===known?' selected':''}>${esc(r.n)}</option>`).join('');
+  // Солдат і рекрут знаків не мають — клітинка лишається порожньою, а не з текстом.
   const face = svg || (known ? '' : `<span class="raw">${esc(e.rankRaw||'')}</span>`);
-  return `<div class="rk" data-tip="${esc(e.rankRaw||'звання не вказано')}">${face}
-    <select onchange="saveRank('${p.id}',this.value)">
-      <option value=""${!known&&!e.rankRaw?' selected':''}>—</option>${unknown}${opts}
-    </select></div>`;
+  return `<div class="rk selcell" data-tip="${esc(e.rankRaw||'звання не вказано')}">${face}</div>`;
 }
-function rankCell(p, e){ return `<div class="c ctr">${rankFace(e)}</div>`; }
+function rankCell(p, e){ return `<div class="c ctr selcell">${rankFace(e)}</div>`; }
 function stateChip(e){
   if(!e.abs) return '<span class="dim">—</span>';
   const a = e.abs;
@@ -1484,18 +1719,13 @@ function certChip(p){
   const mc = mainCert(p);
   return mc ? `<span class="chip main">${esc(certLabel(mc))}</span>` : '<span class="dim">—</span>';
 }
-function expBtn(p){
-  const n = (p.certs||[]).length + (p.absences||[]).length;
-  return `<button class="exp" data-tip="Картка: допуски й відсутність"
-    onclick="openCard('${p.id}')">${icon('chev')}<span class="num">${n}</span></button>`;
-}
 
 
 /* ================= ПІДСУМОК ================= */
 function renderSum(){
   const t = reportTotals();
   const cells = [
-    {l: DIR ? 'штат '+DIR : 'за штатом', v:t.shtat, hi:!!DIR},
+    {l: anyDir() ? 'штат '+dirLabel() : 'за штатом', v:t.shtat, hi:anyDir()},
     {l:'укомпл.', v:t.shtatni},
     {l:'вакансій', v:t.vac},
     {l:'позашт.', v:t.poza},
@@ -1509,11 +1739,10 @@ function renderSum(){
 // за штатом — посад; штатних — зайнятих; позаштатних — активні без посади в цьому підрозділі;
 // за списком = штатних + позаштатних; в наявності = за списком − відсутні сьогодні.
 function reportRows(){
-  const multi = sheets().length > 1 && !SHEET;
   const rows = [];
   for(const g of groupsInOrder()){
     const posts = POSTS.filter(p=>(p.sheet||'')===g.sheet
-      && (p.unit||NO_UNIT)===g.unit && (!DIR||p.tag===DIR));
+      && (p.unit||NO_UNIT)===g.unit && dirOn(p.tag));
     const occ = posts.map(p=>occupant(p.id)).filter(Boolean);
     // позаштатні рахуються один раз — у штатці, до якої віднесено їхній підрозділ
     const poza = extras().filter(p=>(p.unit||NO_UNIT)===g.unit
@@ -1522,7 +1751,6 @@ function reportRows(){
     const absent = list.filter(p=>activeAbsence(p)).length;
     if(!posts.length && !list.length) continue;      // порожні рядки не показуємо
     rows.push({unit:g.unit, sheet:g.sheet,
-      label: multi ? `${sheetName(g.sheet)} · ${g.unit}` : g.unit,
       shtat:posts.length, shtatni:occ.length, vac:posts.length-occ.length,
       poza:poza.length, spysok:list.length, absent, nayav:list.length-absent});
   }
@@ -1536,14 +1764,43 @@ function sumRows(rows){
 const reportTotals = () => sumRows(reportRows());
 const pct = (a,b) => b ? Math.round(a/b*100)+'%' : '—';
 
+/* На телефоні дев'ять числових колонок не влазять, а бічна прокрутка в
+   звіті найгірша — тому картка на підрозділ із парами «підпис — число». */
+function repNoteText(){
+  return `${sheetName(SHEET)}${anyDir() ? ' · ' + dirLabel() : ''} · ${today()}`;
+}
+function renderReportMob(rows, t){
+  const cell = (l, v, cls) => `<div class="rc${cls?' '+cls:''}"><span>${l}</span><b>${v}</b></div>`;
+  const card = r => `<div class="rcard">
+      <div class="rh">${esc(r.unit)}</div>
+      <div class="rg">
+        ${cell('за штатом', r.shtat)}
+        ${cell('штатних', r.shtatni)}
+        ${cell('вакансій', r.vac||'—')}
+        ${cell('позаштатних', r.poza||'—')}
+        ${cell('за списком', r.spysok)}
+        ${cell('відсутніх', r.absent||'—', r.absent?'warn':'')}
+        ${cell('в наявності', r.nayav)}
+        ${cell('укомпл.', pct(r.shtatni, r.shtat))}
+      </div></div>`;
+  $('gRep').innerHTML = rows.map(card).join('') + `<div class="rcard tot">
+      <div class="rh">Разом</div>
+      <div class="rg">${cell('за штатом', t.shtat)}${cell('штатних', t.shtatni)}
+      ${cell('за списком', t.spysok)}${cell('в наявності', t.nayav)}
+      ${cell('укомпл.', pct(t.shtatni, t.shtat))}</div></div>`;
+}
 function renderReport(){
-  const rows = reportRows(), t = reportTotals(), sh = combined();
-  $('gRep').classList.toggle('sh', sh);
-  const head = (sh?['Тип підрозділу']:[]).concat(['Підрозділ','За штатом','Штатних','Вакансій',
-    'Позаштатних','За списком','Відсутніх','В наявності','Укомплектованість']);
-  const textCols = sh ? 2 : 1;      // текстові колонки зліва, решта — числа праворуч
-  const out = [head.map((h,i)=>`<div class="c h${i>=textCols?' rt':''}"
-    style="padding:0 10px">${h}</div>`).join('')];
+  const rows = reportRows(), t = reportTotals();
+  $('gRep').classList.toggle('mob', MOB());
+  $('repNote').textContent = repNoteText();
+  if(MOB()){
+    if(!rows.length){ $('gRep').innerHTML = '<div class="empty">Немає даних</div>'; }
+    else renderReportMob(rows, t);
+    return;
+  }
+  const head = ['Підрозділ','За штатом','Штатних','Вакансій',
+    'Позаштатних','За списком','Відсутніх','В наявності','Укомпл.'];
+  const out = [head.map((h,i)=>`<div class="c h${i?' rt':''}">${h}</div>`).join('')];
   const cells = r => `<div class="c rt num">${r.shtat}</div><div class="c rt num">${r.shtatni}</div>
     <div class="c rt num">${r.vac||'—'}</div><div class="c rt num">${r.poza||'—'}</div>
     <div class="c rt num">${r.spysok}</div><div class="c rt num">${r.absent||'—'}</div>
@@ -1551,27 +1808,13 @@ function renderReport(){
 
   if(!rows.length){
     $('gRep').innerHTML = out.join('') + '<div class="empty">Немає даних за цією штаткою</div>';
-  } else if(sh){
-    for(const b of blocksOf(rows)){
-      // + 1 рядок на підсумок штатки
-      out.push(`<div class="c sheetcell" style="grid-row:span ${b.groups.length+1}">
-        ${esc(sheetName(b.sheet))}</div>`);
-      for(const r of b.groups)
-        out.push(`<div class="row"><div class="c"><span class="t">${esc(r.unit)}</span></div>${cells(r)}</div>`);
-      out.push(`<div class="row tot"><div class="c">Разом ${esc(sheetName(b.sheet))}</div>
-        ${cells(sumRows(b.groups))}</div>`);
-    }
-    out.push(`<div class="row tot"><div class="c" style="grid-column:1/3">Разом усі</div>${cells(t)}</div>`);
-    $('gRep').innerHTML = out.join('');
-  } else {
+} else {
     for(const r of rows)
       out.push(`<div class="row"><div class="c"><span class="t">${esc(r.unit)}</span></div>${cells(r)}</div>`);
     out.push(`<div class="row tot"><div class="c">Разом</div>${cells(t)}</div>`);
     $('gRep').innerHTML = out.join('');
   }
-  $('repNote').textContent = `Штатка: ${SHEET?sheetName(SHEET):'усі'}`
-    + (DIR ? ` · напрям: ${DIR}` : ' · усі напрями')
-    + ` · укомплектованість = штатних / за штатом · станом на ${today()}`;
+  $('repNote').textContent = repNoteText();
 }
 
 /* ================= ВИБУЛІ / ЖУРНАЛ ================= */
@@ -1634,12 +1877,13 @@ const rowKey = e => e.person ? e.person.id : 'p:'+e.post.id;
 function paintSel(){
   const rows = [...$('gMain').querySelectorAll('.row[data-k]')];
   for(const el of rows) el.classList.toggle('sel', SEL.has(el.dataset.k));
-  const hb = $('gMain').querySelector('.c.h .selbox');
-  if(hb){
-    const all = ORDER.length && SEL.size === ORDER.length;
+  const all = ORDER.length && SEL.size === ORDER.length;
+  for(const hb of $('gMain').querySelectorAll('.c.h.selall')){
     hb.classList.toggle('on', !!all);
     hb.classList.toggle('some', !all && SEL.size > 0);
   }
+  const mb = $('massBtn');
+  if(mb) mb.disabled = SEL.size === 0;
   const note = $('selNote');
   note.hidden = SEL.size === 0;
   note.textContent = SEL.size ? `виділено ${SEL.size}` : '';
@@ -1678,32 +1922,26 @@ function initSelection(){
   const g = $('gMain');
   g.addEventListener('mousedown', ev=>{
     if(ev.button!==0) return;
-    // клік по підрозділу або типу підрозділу бере всю групу
-    const grp = ev.target.closest('[data-range]');
-    if(grp && !ev.target.closest('.selcell')){
-      ev.preventDefault();
-      const [a,b] = grp.dataset.range.split(',').map(Number);
-      dragBase = (ev.ctrlKey||ev.metaKey) ? new Set(SEL) : null;
-      anchor = a; applyRange(a, b); dragBase = null;
-      return;
-    }
+    // Виділяє виключно клітинка зі знаком розрізнення — більше ніщо в рядку.
     const cell = ev.target.closest('.selcell');
-    if(!cell) return;                     // тіло рядка виділення не чіпає
+    if(!cell) return;
     const row = cell.closest('.row[data-i]');
     if(!row) return;                      // це заголовок — його обробляє toggleAll
     ev.preventDefault();
     const i = +row.dataset.i, k = row.dataset.k;
-    if(ev.shiftKey && anchor>=0){         // діапазон від якоря
-      dragBase = (ev.ctrlKey||ev.metaKey) ? new Set(SEL) : null;
+    if(ev.shiftKey && anchor>=0){         // Shift дотягує діапазон від якоря
+      dragBase = new Set(SEL);
       applyRange(anchor, i);
       dragBase = null;
       return;
     }
-    dragBase = new Set(SEL);              // знімок, щоб було куди відкочувати
+    /* Як чекбокс: клік перемикає свій рядок, решта виділення лишається —
+       тому кілька окремих діапазонів набираються без модифікаторів. */
+    dragBase = new Set(SEL);
     paintOn = !SEL.has(k);
     anchor = i;
     dragging = true;
-    g.classList.add('painting');
+    for(const x of mainGrids()) x.classList.add('painting');
     applyPaint(i);
   });
   g.addEventListener('mouseover', ev=>{
@@ -1714,7 +1952,7 @@ function initSelection(){
   addEventListener('mouseup', ()=>{
     if(!dragging) return;
     dragging = false; dragBase = null;
-    $('gMain').classList.remove('painting');
+    for(const x of mainGrids()) x.classList.remove('painting');
   });
 }
 function selectedEntries(){ return ORDER.filter(k=>SEL.has(k)).map(k=>RMAP.get(k)).filter(Boolean); }
@@ -1728,13 +1966,12 @@ function actionEntries(){
 function rowRecord(e, c, fmt){
   c = c || CASE; fmt = fmt || (INITIALS ? 'init' : 'full');
   const o = {};
-  if(combined()) o['Тип підрозділу'] = sheetName(e.sheet);
   o['Підрозділ'] = e.unit;
   o['Штат'] = e.post ? (e.post.tag||'') : '';
   o['Посада'] = e.position;
   o['в/з'] = e.rankRaw ? declRank(normRank(e.rankRaw) || e.rankRaw, c) : '';
   o['ПІБ'] = e.pib ? declPIB(e.pib, c, fmt) : 'ВАКАНСІЯ';
-  o['Телефон'] = e.person ? (e.person.phone || '') : '';
+  o['Телефон'] = e.person ? phoneLocal(e.person.phone) : '';
   o['Наявність'] = e.abs ? absName(e.abs.kind) : (e.person ? 'в наявності' : '');
   const mc = e.person ? mainCert(e.person) : null;
   o['Головний допуск'] = mc ? certLabel(mc) : '';
@@ -1762,6 +1999,10 @@ function openCard(pid){
   const p = byId(pid);
   if(!p) return;
   cardFor = pid;
+  if(!$('cardRank').options.length){
+    $('cardRank').innerHTML = '<option value="">—</option>'
+      + RANKS.map(r=>`<option>${esc(r.n)}</option>`).join('');
+  }
   if(!$('acTag').options.length){
     $('acTag').innerHTML = TAGS.map(t=>`<option>${esc(t)}</option>`).join('');
     const kinds = ABSENCE.map(a=>`<option value="${esc(a.k)}">${esc(a.k)} — ${esc(a.n)}</option>`).join('');
@@ -1776,7 +2017,23 @@ function cardRender(){
   if(!p){ dlgCard.close(); return; }
   $('cardWho').textContent = p.pib;
   $('cardSub').textContent = [p.rank, p.unit, p.position].filter(Boolean).join(' · ');
+  $('cardPib').value = p.pib || '';
+  $('cardRank').value = normRank(p.rank) || '';
   $('cardPhone').value = p.phone || '';
+  /* Підрозділ і посада штатного змінюються тільки переміщенням — інакше
+     картка людини й штатка розійдуться. Тому для нього це просто текст. */
+  const staff = !!p.postId;
+  $('cardUnit').value = p.unit || '';
+  $('cardPos').value = p.position || '';
+  $('cardUnit').readOnly = staff;
+  $('cardPos').readOnly = staff;
+  $('cardUnitWrap').classList.toggle('ro', staff);
+  $('cardPosWrap').classList.toggle('ro', staff);
+  $('cardActs').innerHTML = [
+    `<button type="button" class="btn" onclick="openMove('${p.id}')">${icon('move')}`
+      + (staff ? 'Перемістити' : 'На штатну посаду') + '</button>',
+    `<button type="button" class="btn danger" onclick="dismiss('${p.id}')">${icon('out')}Вибув</button>`,
+  ].filter(Boolean).join('');
 
   const mc = mainCert(p), cur = activeAbsence(p);
   const certs = (p.certs||[]).slice().sort((a,b)=>certWeight(b)-certWeight(a));
@@ -1800,13 +2057,16 @@ function cardRender(){
         onclick="delAbsence('${p.id}','${a.id}')">${icon('trash')}</button></span>
     </div>`).join('') : '<div class="none">Відсутностей немає</div>';
 }
-async function cardSavePhone(){
-  const p = byId(cardFor), v = $('cardPhone').value.trim();
-  if(!p || (p.phone||'') === v) return;
+async function cardSave(field, input){
+  const p = byId(cardFor), v = input.value.trim();
+  if(!p || (p[field]||'') === v) return;
+  if(field === 'pib' && !v){ input.value = p.pib; toast('ПІБ не може бути порожнім', true); return; }
   try{
-    await api('persons/'+cardFor, {method:'PUT', body:JSON.stringify({phone:v})});
-    p.phone = v; renderAll();
-  }catch(e){ toast(e.message, true); $('cardPhone').value = p.phone||''; }
+    await api('persons/'+cardFor, {method:'PUT', body:JSON.stringify({[field]: v})});
+    p[field] = v;
+    input.classList.add('saved'); setTimeout(()=>input.classList.remove('saved'), 800);
+    cardRender(); fillScope(); renderAll();
+  }catch(e){ toast(e.message, true); input.value = p[field] || ''; }
 }
 async function cardAddCert(){
   const body = {tag:$('acTag').value, level:+$('acLevel').value, date:$('acDate').value,
@@ -1865,13 +2125,15 @@ async function massAbsence(){
 function openOut(){
   if(!$('outCase').options.length)
     $('outCase').innerHTML = CASES.map(x=>`<option value="${x.k}">${esc(x.n)}</option>`).join('');
-  $('outCase').value = CASE;
-  $('outFmt').value = INITIALS ? 'init' : 'full';
+  $('outCase').value = OUT.case;
+  $('outFmt').value = OUT.fmt;
   outRender();
   dlgOut.showModal();
 }
+/* Вибір відмінка й формату памʼятаємо між вивантаженнями. */
+const OUT = {case:'nom', fmt:'full'};
 function outRows(){
-  const c = $('outCase').value, fmt = $('outFmt').value;
+  const c = OUT.case = $('outCase').value, fmt = OUT.fmt = $('outFmt').value;
   const withVac = $('outVac').checked;
   return actionEntries()
     .filter(e => withVac || e.person)
@@ -2105,9 +2367,9 @@ function toggleF(k, v, on){ on ? F[k].add(v) : F[k].delete(v); renderAll(); }
 function refreshFilter(k){ $('fpop').innerHTML = enumFilterHtml(k); }
 
 /* ================= ДІАЛОГ-ПИТАННЯ ================= */
-let askResolve=null, askVal=null, askIsInput=false;
+let askResolve=null, askIsInput=false;
 function ask(o){
-  askVal = null; askIsInput = !!o.input;
+  askIsInput = !!o.input;
   $('askTitle').textContent = o.title || 'Підтвердження';
   $('askBody').innerHTML = o.body || '';
   const inp = $('askInput');
@@ -2116,54 +2378,49 @@ function ask(o){
   ok.textContent = o.ok || 'Так';
   ok.classList.toggle('danger', !!o.danger); ok.classList.toggle('primary', !o.danger);
   dlgAsk.showModal();
-  if(o.input) setTimeout(()=>{ inp.focus(); inp.select(); }, 30);
+  if(o.input) setTimeout(()=>{ if(!inp.isConnected) return; inp.focus(); inp.select(); }, 30);
   return new Promise(res=>askResolve=res);
+}
+/* Відповідь віддаємо самі, а не з події close: коли close() викликають прямо в
+   обробнику submit, подія іноді не приходить — і виклик ask() висить назавжди
+   разом із дією, яка його чекала (так мовчки ламалось перейменування штатки). */
+function askDone(v){
+  const r = askResolve; askResolve = null;
+  const d = $('dlgAsk');            // вікна може вже й не бути в документі
+  if(d && d.open) d.close();
+  if(r) r(v);
 }
 function askSubmit(e){
   e.preventDefault();
-  askVal = askIsInput ? $('askInput').value.trim() : true;
-  dlgAsk.close();
+  askDone(askIsInput ? $('askInput').value.trim() : true);
   return false;
 }
-dlgAsk.addEventListener('close', ()=>{ if(askResolve){ const r=askResolve; askResolve=null; r(askVal); } });
+// Escape і закриття повз кнопки — теж відповідь, інакше промс лишиться висіти.
+dlgAsk.addEventListener('cancel', ()=>askDone(null));
+dlgAsk.addEventListener('close', ()=>askDone(null));
 
 /* ================= ЗБЕРЕЖЕННЯ ================= */
-async function saveField(pid, field, input){
-  const p = byId(pid); if(!p) return;
-  const val = input.value.trim();
-  if((p[field]||'') === val) return;
-  try{
-    await api('persons/'+pid, {method:'PUT', body:JSON.stringify({[field]:val})});
-    p[field] = val;
-    input.classList.add('saved'); setTimeout(()=>input.classList.remove('saved'), 800);
-  }catch(e){ input.value = p[field]||''; toast(e.message, true); }
-}
 async function saveRank(pid, val){
   const p = byId(pid); if(!p || (p.rank||'')===val) return;
   try{ await api('persons/'+pid, {method:'PUT', body:JSON.stringify({rank:val})}); p.rank = val; }
   catch(e){ toast(e.message, true); }
   renderAll();
 }
-async function vacantOut(ev, postId){
-  const row = ev.currentTarget;
-  if(ev.relatedTarget && row.contains(ev.relatedTarget)) return;
-  const pib = row.querySelector('.in-pib').value.trim();
-  if(!pib) return;
-  const rank = row.querySelector('.in-rank').value.trim();
-  try{
-    const p = await api('persons', {method:'POST', body:JSON.stringify({pib, rank, postId})});
-    PERSONS.push(p); renderAll(); toast('Додано: '+pib);
-  }catch(e){ toast(e.message, true); }
+let moveKindVal = 'post';
+function moveKind(k){
+  moveKindVal = k;
+  $('mAsPost').classList.toggle('on', k==='post');
+  $('mAsFree').classList.toggle('on', k==='free');
+  $('mPostWrap').hidden = k!=='post';
+  $('mFreeWrap').hidden = k!=='free';
+  $('mSwap').hidden = k!=='post' || !occupant($('mPost').value);
 }
-
-/* ================= ДІЇ ================= */
-let moveFor = null;
-// Список усіх посад, не лише вакантних: зайняту теж можна зайняти,
-// тоді треба сказати, куди подіти того, хто на ній сидить.
 function openMove(pid){
   const p = byId(pid); if(!p) return;
   moveFor = pid;
-  $('moveTitle').textContent = p.postId ? 'Переміщення' : 'Призначення на посаду';
+  $('moveTitle').textContent = 'Переміщення';
+  $('mUnit').value = p.unit || '';
+  $('mPos').value = '';
   $('moveWho').textContent = `${p.pib}${p.postId?` — зараз: ${p.unit}, ${p.position}`:' (позаштатний)'}`;
   const by = {};
   for(const post of POSTS){
@@ -2179,6 +2436,7 @@ function openMove(pid){
   $('mPost').innerHTML = opts || '<option value="">— посад немає —</option>';
   $('mReason').value = '';
   moveTarget();
+  moveKind('post');
   dlgMove.showModal();
 }
 // Показує блок «куди подіти того, хто вже на посаді», коли ціль зайнята.
@@ -2186,7 +2444,7 @@ function moveTarget(keep){
   const p = byId(moveFor);
   const post = POSTS.find(x=>x.id===$('mPost').value);
   const occ = post ? occupant(post.id) : null;
-  $('mSwap').hidden = !occ;
+  $('mSwap').hidden = !occ || moveKindVal !== 'post';
   if(!occ) return;
   const canSwap = !!(p && p.postId);
   $('mOccLabel').textContent = `Посаду займає ${occ.pib} — куди його?`;
@@ -2201,49 +2459,71 @@ function moveTarget(keep){
 }
 async function saveMove(e){
   e.preventDefault();
-  const postId = $('mPost').value;
-  if(!postId){ toast('Немає посади для призначення', true); return false; }
-  const displace = $('mSwap').hidden ? ''
-    : ($('mDispSwap').checked ? 'swap' : 'extra');
+  const reason = $('mReason').value.trim();
   try{
-    await api(`persons/${moveFor}/move`, {method:'POST',
-      body:JSON.stringify({postId, displace, reason:$('mReason').value.trim()})});
-    dlgMove.close(); await reload(); toast('Виконано');
+    if(moveKindVal === 'free'){
+      /* Своя посада = позаштат: людина йде зі штатної, а підрозділ і назву
+         посади вписують руками. Окрема кнопка «у позаштат» для цього зайва. */
+      const pos = $('mPos').value.trim();
+      if(!pos){ toast('Впишіть посаду', true); return false; }
+      await api(`persons/${moveFor}/move`, {method:'POST',
+        body:JSON.stringify({extra:true, reason})});
+      await api('persons/'+moveFor, {method:'PUT',
+        body:JSON.stringify({unit:$('mUnit').value.trim(), position:pos})});
+    }else{
+      const postId = $('mPost').value;
+      if(!postId){ toast('Немає посади для призначення', true); return false; }
+      const displace = $('mSwap').hidden ? '' : ($('mDispSwap').checked ? 'swap' : 'extra');
+      await api(`persons/${moveFor}/move`, {method:'POST',
+        body:JSON.stringify({postId, displace, reason})});
+    }
+    dlgMove.close(); await reload(); if(dlgCard.open) cardRender();
+    fillScope(); toast('Виконано');
   }catch(err){ toast(err.message, true); }
   return false;
 }
-function openNewExtra(){
-  $('nPib').value=''; $('nRank').value=''; $('nPos').value=''; $('nUnit').value='';
-  dlgNew.showModal(); setTimeout(()=>$('nPib').focus(), 30);
+let newKindVal = 'staff';
+function newKind(k){
+  newKindVal = k;
+  $('nAsStaff').classList.toggle('on', k==='staff');
+  $('nAsExtra').classList.toggle('on', k==='extra');
+  $('nStaffWrap').hidden = k!=='staff';
+  $('nExtraWrap').hidden = k!=='extra';
 }
-async function saveNewExtra(e){
+/* Вакансії показуємо в межах поточної штатки — саме з нею людина працює. */
+function vacantPosts(){
+  return POSTS.filter(x=>(x.sheet||'')===SHEET && !occupant(x.id));
+}
+function openNew(postId){
+  for(const id of ['nPib','nPhone','nPos','nUnit']) $(id).value = '';
+  $('nRank').value = '';
+  const vac = vacantPosts();
+  const by = {};
+  for(const post of vac) (by[`${sheetName(post.sheet)} · ${post.unit}`] ||= []).push(post);
+  $('nPost').innerHTML = Object.entries(by).map(([g,ps]) =>
+    `<optgroup label="${esc(g)}">${ps.map(post=>
+      `<option value="${post.id}">${esc(post.position)}${post.tag?' ['+esc(post.tag)+']':''}</option>`
+    ).join('')}</optgroup>`).join('') || '<option value="">— вакансій немає —</option>';
+  if(postId) $('nPost').value = postId;
+  newKind(postId || vac.length ? 'staff' : 'extra');
+  dlgNew.showModal(); setTimeout(()=>$('nPib')?.focus(), 30);
+}
+async function saveNew(e){
   e.preventDefault();
-  const body = {pib:$('nPib').value.trim(), rank:$('nRank').value,
-                unit:$('nUnit').value.trim(), position:$('nPos').value.trim()};
+  const body = {pib:$('nPib').value.trim(), rank:$('nRank').value, phone:$('nPhone').value.trim()};
   if(!body.pib){ toast('ПІБ обовʼязкове', true); return false; }
+  if(newKindVal === 'staff'){
+    body.postId = $('nPost').value;
+    if(!body.postId){ toast('Оберіть вакантну посаду', true); return false; }
+  }else{
+    body.unit = $('nUnit').value.trim();
+    body.position = $('nPos').value.trim();
+  }
   try{
-    const p = await api('persons', {method:'POST', body:JSON.stringify(body)});
-    PERSONS.push(p); dlgNew.close(); fillScope(); renderAll(); toast('Додано: '+p.pib);
+    await api('persons', {method:'POST', body:JSON.stringify(body)});
+    dlgNew.close(); await reload(); toast('Додано: '+body.pib);
   }catch(err){ toast(err.message, true); }
   return false;
-}
-async function editUnit(pid){
-  const p = byId(pid);
-  const v = await ask({title:'Підрозділ', ok:'Зберегти', input:true, value:p.unit,
-    placeholder:'назва підрозділу', body:`Позаштатний <b>${esc(p.pib)}</b>`});
-  if(v===null || v===p.unit) return;
-  try{ await api('persons/'+pid, {method:'PUT', body:JSON.stringify({unit:v})});
-    p.unit = v; fillScope(); renderAll(); }
-  catch(e){ toast(e.message, true); }
-}
-async function toExtras(pid){
-  const p = byId(pid);
-  const reason = await ask({title:'Зняти з посади', ok:'Зняти', input:true,
-    placeholder:'підстава (необовʼязково)',
-    body:`<b>${esc(p.pib)}</b> — з посади «${esc(p.position)}» у позаштатні. Посада стане вакантною.`});
-  if(reason===null) return;
-  try{ await api(`persons/${pid}/move`, {method:'POST', body:JSON.stringify({extra:true, reason})});
-    await reload(); toast('Переведено в позаштатні'); }catch(e){ toast(e.message, true); }
 }
 async function dismiss(pid){
   const p = byId(pid);
@@ -2252,6 +2532,7 @@ async function dismiss(pid){
     body:`<b>${esc(p.pib)}</b> перейде у вкладку «Вибулі», посада стане вакантною.`});
   if(reason===null) return;
   try{ await api(`persons/${pid}/dismiss`, {method:'POST', body:JSON.stringify({reason})});
+    if(dlgCard.open) dlgCard.close();
     await reload(); toast('Позначено як вибув'); }
   catch(e){ toast(e.message, true); }
 }
@@ -2326,9 +2607,9 @@ let LAST_IMPORT = '';
 
 function openImport(){
   $('impA').hidden=false; $('impB').hidden=true;
-  $('impText').value=''; $('impFile').value=''; $('impSheet').value = SHEET;
+  $('impText').value=''; $('impFile').value=''; $('impSheet').value = SHEET || '';
   $('impHist').innerHTML = '';
-  dlgImport.showModal(); setTimeout(()=>$('impText').focus(), 30);
+  dlgImport.showModal(); setTimeout(()=>$('impText')?.focus(), 30);
   loadImports();
 }
 /* Кожен імпорт лишає слід; поки він є — імпорт можна скасувати цілком,
@@ -2520,7 +2801,7 @@ async function impRun(){
 function openReset(){
   $('rsPosts').checked=true; $('rsPersons').checked=true; $('rsJournal').checked=false;
   $('rsConfirm').value='';
-  dlgReset.showModal(); setTimeout(()=>$('rsConfirm').focus(), 30);
+  dlgReset.showModal(); setTimeout(()=>$('rsConfirm')?.focus(), 30);
 }
 async function resetRun(e){
   e.preventDefault();
@@ -2529,7 +2810,7 @@ async function resetRun(e){
   try{
     const r = await api('reset', {method:'POST', body:JSON.stringify(body)});
     dlgReset.close();
-    LOGS=[]; SHEET=''; localStorage.removeItem('sheet');
+    LOGS=[]; SHEET=null; localStorage.removeItem('sheet');
     await reload();
     if(TAB==='l') loadLog();
     toast('Скинуто — ' + (Object.entries(r).map(([k,v])=>`${k}: ${v}`).join(', ') || 'нічого не було'));
@@ -2550,7 +2831,7 @@ function loadSheetJS(){
   return sheetJS;
 }
 function reportSheetRows(){
-  const rows = reportRows().map(r=>({'Тип підрозділу':sheetName(r.sheet),'Підрозділ':r.unit,'За штатом':r.shtat,'Штатних':r.shtatni,
+  const rows = reportRows().map(r=>({'Підрозділ':r.unit,'За штатом':r.shtat,'Штатних':r.shtatni,
     'Вакансій':r.vac,'Позаштатних':r.poza,'За списком':r.spysok,'Відсутніх':r.absent,
     'В наявності':r.nayav,'Укомплектованість':pct(r.shtatni,r.shtat)}));
   const t = reportTotals();
@@ -2564,7 +2845,7 @@ async function exportReport(){
     await loadSheetJS();
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportSheetRows()), 'Звіт');
-    const tag = [SHEET||'усі', DIR||'усі-напрями'].join('_').replace(/[^\wА-Яа-яЇїІіЄєҐґ-]+/g,'_');
+    const tag = [sheetName(SHEET), anyDir() ? dirLabel() : 'усі-напрями'].join('_').replace(/[^\wА-Яа-яЇїІіЄєҐґ-]+/g,'_');
     XLSX.writeFile(wb, `zvit_${tag}_${today()}.xlsx`);
   }catch(err){ toast(err.message, true); }
 }
@@ -2618,16 +2899,12 @@ async function exportXlsx(){
 }
 
 /* ================= СТАРТ ================= */
-$('fCase').innerHTML = CASES.map(x=>`<option value="${x.k}">${esc(x.n)}</option>`).join('');
-$('fCase').value = CASE;
-$('initBtn').setAttribute('aria-pressed', INITIALS ? 'true' : 'false');
-document.documentElement.style.setProperty('--dh', hueOf(DIR));
+document.documentElement.style.setProperty('--dh', hueOf([...DIRS][0]));
 try{ Object.assign(SOPT, JSON.parse(localStorage.getItem('sopt')||'{}')); }catch(_){}
 $('soCase').checked=SOPT.case; $('soWord').checked=SOPT.word; $('soRe').checked=SOPT.re;
 setSopt();
 initSelection();
-if(MOB()) EDIT=false;   // телефон — лише перегляд
-applyEdit();
+applyOffline();
 chromeRO.observe(document.querySelector('header'));
 for(const b of document.querySelectorAll('.bar')) chromeRO.observe(b);
 showTab('c');

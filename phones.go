@@ -17,6 +17,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -288,6 +289,84 @@ func runPhones(ctx context.Context, path string, apply bool) {
 	}
 	addLog(ctx, "", "—", "Телефони", fmt.Sprintf("залито зі списку, записів: %d", done))
 	fmt.Printf("записано номерів: %d\n", done)
+}
+
+// ---------- разове перейменування підрозділів ----------
+//
+//	personnel -units units.tsv          — показати, що зміниться
+//	personnel -units units.tsv -apply   — записати
+//
+// Файл: дві колонки через табуляцію — стара назва і нова. Тримаємо його поза
+// репозиторієм: справжні назви підрозділів там зберігати не можна.
+func runUnits(ctx context.Context, path string, apply bool) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		fatalf("не вдалося прочитати %s: %v", path, err)
+	}
+	ren := map[string]string{}
+	for i, line := range strings.Split(strings.ReplaceAll(string(raw), "\r\n", "\n"), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		parts := strings.SplitN(line, "\t", 2)
+		if len(parts) != 2 {
+			fatalf("рядок %d: очікую дві колонки через табуляцію", i+1)
+		}
+		from, to := strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1])
+		if from == "" || to == "" {
+			fatalf("рядок %d: порожня назва", i+1)
+		}
+		ren[from] = to
+	}
+	if len(ren) == 0 {
+		fatalf("у файлі немає жодної пари")
+	}
+
+	type plan struct {
+		from, to      string
+		posts, people int64
+	}
+	var out []plan
+	for from, to := range ren {
+		np, err := posts.CountDocuments(ctx, bson.M{"unit": from})
+		if err != nil {
+			fatalf("%v", err)
+		}
+		// У штатних unit — копія з посади, у позаштатних — власне поле.
+		nu, err := persons.CountDocuments(ctx, bson.M{"unit": from})
+		if err != nil {
+			fatalf("%v", err)
+		}
+		out = append(out, plan{from, to, np, nu})
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].from < out[j].from })
+
+	var tp, tu int64
+	for _, p := range out {
+		fmt.Printf("  %-4d посад %-4d людей   %s → %s\n", p.posts, p.people, p.from, p.to)
+		tp += p.posts
+		tu += p.people
+	}
+	fmt.Printf("разом: пар %d · посад %d · людей %d\n", len(out), tp, tu)
+	if !apply {
+		fmt.Println("це лише перегляд; додайте -apply, щоб записати")
+		return
+	}
+	now := time.Now().UTC()
+	for _, p := range out {
+		if _, err := posts.UpdateMany(ctx, bson.M{"unit": p.from},
+			bson.M{"$set": bson.M{"unit": p.to}}); err != nil {
+			fmt.Printf("  %s: %v\n", p.from, err)
+			continue
+		}
+		if _, err := persons.UpdateMany(ctx, bson.M{"unit": p.from},
+			bson.M{"$set": bson.M{"unit": p.to, "updatedAt": now}}); err != nil {
+			fmt.Printf("  %s: %v\n", p.from, err)
+		}
+	}
+	addLog(ctx, "", "—", "Підрозділи", fmt.Sprintf("перейменовано назв: %d", len(out)))
+	fmt.Printf("перейменовано: %d\n", len(out))
 }
 
 func fatalf(format string, a ...any) {

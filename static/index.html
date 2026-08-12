@@ -2,7 +2,9 @@
 <html lang="uk">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- resizes-content: коли з'являється клавіатура, вьюпорт стискається разом
+     із нею, і модалка не лишається висотою на весь екран під клавіатурою -->
+<meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
 <title>Облік особового складу</title>
 <style>
 :root{
@@ -15,10 +17,28 @@
   --dir:hsl(var(--dh) 52% 62%);
   --dir-bg:hsl(var(--dh) 30% 15%);
   --dir-line:hsl(var(--dh) 30% 26%);
-  --hh:44px; --r:5px; --cx:8px;
+  --hh:40px; --r:6px; --cx:8px;
+  /* Один зріст для всіх контролів і один крок відступу: раніше кнопки були
+     26, 28 і 30 px, а проміжки — 4, 5, 6, 8, 10, 12 і 14. */
+  --ctl:30px; --g:8px;
 }
 *{box-sizing:border-box}
+/* Chrome малює синій прямокутник на кожен тап — свої стани в нас уже є. */
+*{-webkit-tap-highlight-color:transparent}
+/* Місце під смугу прокрутки резервуємо завжди: інакше короткий результат
+   пошуку прибирає смугу, вьюпорт стає ширшим — і макет смикається. */
+html{scrollbar-gutter:stable}
 [hidden]{display:none!important}
+/* Рух лише там, де показує звʼязок: поява вікон і зміна стану рядка. */
+@media (prefers-reduced-motion: no-preference){
+  dialog[open]{animation:pop .16s ease-out}
+  .sheetbox{animation:rise .16s ease-out}
+  .pop:not([hidden]){animation:pop .12s ease-out}
+  .row>.c{transition:background .12s}
+  .seg button,.tabs button,.btn,.ico{transition:background .12s,color .12s,border-color .12s}
+}
+@keyframes pop{from{opacity:0;transform:translateY(4px) scale(.985)}}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
 body{margin:0;background:var(--bg);color:var(--txt);
   font:13px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
 .mono{font-family:ui-monospace,"Cascadia Mono","JetBrains Mono",Consolas,monospace}
@@ -31,13 +51,24 @@ svg.i.fill{fill:currentColor;stroke:none}
 /* ---------- шапка ---------- */
 /* Смуга на всю ширину, але вміст тримається тієї ж колонки, що й таблиця:
    на широкому екрані кнопки інакше опиняються в різних кінцях монітора. */
-header{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:10px;
-  height:var(--hh);padding:0 max(12px, calc((100% - 1340px) / 2));
-  background:var(--panel);border-bottom:1px solid var(--line)}
+/* Висота за вмістом, без власної межі: межу несе панель під нею, і разом
+   вони виглядають одним блоком, а не смугою й порожнім проміжком. */
+/* Три зони, як у панелі нижче: бічні однакової ширини, тож вкладки стоять
+   рівно по центру й на одній осі з пошуком. Флексом вони зсувалися на різницю
+   ширин лівої та правої груп. */
+header{position:sticky;top:0;z-index:30;display:grid;align-items:center;
+  grid-template-columns:1fr auto 1fr;gap:10px;
+  min-height:var(--hh);padding:4px max(12px, calc((100% - 1340px) / 2));
+  background:var(--panel)}
+.hgrp{display:flex;align-items:center;gap:8px;min-width:0}
+.hgrp.end{justify-content:flex-end}
 header>*{flex:none}
 header .grow{flex:1 1 auto;min-width:0}
 header #fSheet{max-width:230px}
 .tabs{display:flex;align-items:center;gap:2px}
+/* Специфічність вища за спільне правило контролів нижче — інакше кнопка
+   лишалася б видимою і на широкому екрані, де пошук стоїть у панелі. */
+.tabs .more{display:none}
 .tabs button{background:none;border:0;color:var(--dim);padding:0 10px}
 .tabs button:hover{color:var(--txt);background:var(--panel2)}
 .tabs button.on{color:var(--txt);background:var(--panel2)}
@@ -47,16 +78,18 @@ header #fSheet{max-width:230px}
 
 /* ---------- елементи ---------- */
 input,select,textarea{background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+  min-height:var(--ctl);
   padding:4px 7px;border-radius:var(--r);font:inherit}
 textarea{width:100%;resize:vertical;font-family:ui-monospace,Consolas,monospace;font-size:12px}
 input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--edge);outline-offset:1px}
 /* одна висота, один радіус, одна логіка наведення — для всіх кнопок */
-.btn,.ico,.sopt,.seg button,.tabs button{height:26px;border-radius:var(--r);font:inherit;
+.btn,.ico,.sopt,.seg button,.tabs button{height:var(--ctl);border-radius:var(--r);font:inherit;
   font-size:12px;line-height:1;cursor:pointer;white-space:nowrap;
   display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .btn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:0 9px}
 /* Кнопка без підпису — кругла: так вона читається як дія, а не як поле. */
-.btn.ico2{width:30px;height:30px;padding:0;border-radius:50%;justify-content:center;flex:none}
+.btn.ico2{width:var(--ctl);height:var(--ctl);padding:0;border-radius:50%;
+  justify-content:center;flex:none}
 .btn.ico2 .i{width:15px;height:15px}
 .btn:hover{border-color:var(--edge)}
 .btn.primary{background:var(--gold);border-color:var(--gold);color:#15171a;font-weight:600}
@@ -68,22 +101,30 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 .ico:hover{color:var(--txt);background:var(--panel2)}
 .ico.red:hover{color:var(--danger)}
 label.file{cursor:pointer} label.file input{display:none}
-.seg{display:inline-flex;background:var(--sink);border:1px solid var(--line);border-radius:var(--r);padding:2px;gap:2px}
+.seg{position:relative;display:inline-flex;background:var(--sink);
+  border:1px solid var(--line);border-radius:var(--r);padding:2px;gap:2px}
+.seg .ind{position:absolute;left:2px;top:2px;bottom:2px;border-radius:calc(var(--r) - 1px);
+  background:var(--panel2);opacity:0;pointer-events:none;z-index:0}
+@media (prefers-reduced-motion: no-preference){
+  .seg .ind{transition:transform .22s cubic-bezier(.2,.7,.3,1),width .22s cubic-bezier(.2,.7,.3,1)}
+}
+.seg button{position:relative;z-index:1}
 .seg button{background:none;border:0;color:var(--dim);padding:0 10px}
 .seg button:hover{color:var(--txt)}
-.seg button.on{background:var(--panel2);color:var(--txt)}
+.seg button.on{background:none;color:var(--txt);font-weight:600}
 .seg button.on.tinted{background:hsl(var(--h) 30% 18%);color:hsl(var(--h) 50% 72%);
   box-shadow:inset 0 0 0 1px hsl(var(--h) 30% 30%)}
 
 /* ---------- панелі ---------- */
 /* Ширша робоча область не додає читабельності — колонки просто розповзаються,
    а очам доводиться долати пів екрана між посадою і прізвищем. */
-main{max-width:1340px;margin:0 auto;padding:10px 12px 40px}
+main{max-width:1340px;margin:0 auto;padding:0 12px 40px}
 /* панель лишається під шапкою при прокрутці, інакше кнопки «тікають» угору.
    Три зони: дії зліва, пошук строго по центру, файли справа. */
 .bar{position:sticky;top:var(--hh);z-index:25;display:grid;align-items:center;
   grid-template-columns:1fr auto 1fr;gap:8px;
-  margin:0 -12px 6px;padding:6px 12px;background:var(--bg)}
+  margin:0 -12px var(--g);padding:6px 12px;background:var(--panel);
+  border-bottom:1px solid var(--line)}
 /* Дії тримаються пошуку: розкидані по кутах, вони змушували водити очима. */
 .bar .mid{display:flex;align-items:center;gap:6px;justify-self:center}
 .bar .mid .search{width:min(46vw,420px);max-width:none;margin:0}
@@ -92,7 +133,6 @@ main{max-width:1340px;margin:0 auto;padding:10px 12px 40px}
 .bar.plain{display:flex;gap:8px;align-items:center}
 .bar.plain .btn{flex:none}
 .grp .sep{width:1px;height:18px;background:var(--line);margin:0 2px}
-header .hsep{width:1px;height:20px;background:var(--line);margin:0 4px;flex:none}
 .bar .lbl{font-size:12px;color:var(--faint);text-transform:uppercase;letter-spacing:.07em}
 .search{display:flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);
   border-radius:var(--r);padding:0 8px;min-width:170px;flex:1;max-width:270px}
@@ -123,10 +163,14 @@ header .hsep{width:1px;height:20px;background:var(--line);margin:0 4px;flex:none
 /* ---------- сітка ---------- */
 .grid{display:grid;background:var(--panel);border:1px solid var(--line);align-content:start}
 /* Кожна штатка — своя таблиця: назва зверху, далі власна шапка. */
-.tables{display:flex;flex-direction:column;align-items:center;gap:14px}
+.tables{display:flex;flex-direction:column;align-items:center;gap:var(--g)}
+.wrap.swipe{position:relative}
+.tables.peek{position:absolute;top:0;left:0;right:0;pointer-events:none}
+.swiping .tables{will-change:transform}
 .tbl{min-width:0;max-width:100%}
 /* Рамка навколо складу зайва — його межі й так задають шапка та останній рядок. */
-.g-main{border:0;border-bottom:1px solid var(--line);background:none}
+.g-main,.g-rep,.g-out,.g-log{border:0;background:none;
+  border-radius:14px;clip-path:inset(0 round 14px)}
 /* Ширину задає вміст, а не вікно: колонка рівно така, якої потребує
    найдовше значення серед усіх підрозділів. Довгі посади й ПІБ обмежені, щоб
    один запис не розтягнув усю таблицю. */
@@ -134,39 +178,41 @@ header .hsep{width:1px;height:20px;background:var(--line);margin:0 4px;flex:none
   max-content minmax(150px,max-content) 46px minmax(150px,max-content)
   max-content minmax(84px,max-content) max-content;
   width:max-content;max-width:100%;margin:0 auto}
+/* Кути ріже clip-path, а не overflow: overflow зробив би сітку власним
+   контейнером прокрутки, і липкий заголовок прилипав би всередині неї. */
 .g-main .pos .t{max-width:440px}
 .g-main .nm{max-width:320px}
-/* картковий звіт для телефона */
-.g-rep.mob{display:block;border:0;background:none}
-.rcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
-  padding:7px 9px;margin-bottom:6px}
-.rcard.tot{background:var(--panel2)}
-.rcard .rh{font-weight:600;font-size:13px;margin-bottom:5px}
-.rcard .rh .dim{font-weight:400;font-size:11px}
-.rg{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px}
-.rc{display:flex;align-items:baseline;justify-content:space-between;gap:6px;
-  font-size:12px;color:var(--faint);border-bottom:1px solid var(--line);padding:2px 0}
-.rc b{color:var(--txt);font-variant-numeric:tabular-nums}
-.rc.warn b{color:var(--warn)}
-.g-rep{grid-template-columns:minmax(120px,max-content) repeat(8,minmax(56px,max-content));
+.g-rep{grid-template-columns:minmax(150px,240px) repeat(8,92px);
   width:max-content;max-width:100%;margin:0 auto}
+.g-rep.mob{grid-template-columns:minmax(0,1fr) repeat(3,62px);width:100%}
+/* Числову таблицю легше читати з сіткою в обидва боки; пунктир не важчить.
+   Усі числові клітинки однакові й по центру — око йде рівними стовпчиками. */
+.g-rep>.c,.g-rep>.row>.c{border-bottom:1px dotted var(--edge);
+  border-right:1px dotted var(--edge);min-height:34px;
+  justify-content:center;text-align:center;padding:0 6px}
+.g-rep>.c:nth-child(1),.g-rep>.row>.c:nth-child(1){justify-content:flex-start;
+  text-align:left;padding:0 12px}
+.g-rep>.c.h{border-bottom:1px solid var(--edge);font-weight:500;font-size:11px;
+  letter-spacing:.01em;color:var(--faint)}
+.g-rep>.c:last-child,.g-rep>.row>.c:last-child{border-right:0}
+.g-rep>.row:last-child>.c{border-bottom:0}
+.g-rep .row>.c{font-size:13px}
+.g-rep .row>.c:nth-child(1){font-weight:500}
+.g-rep .row.tot>.c{background:var(--sink);font-weight:600}
 .g-out{grid-template-columns:minmax(120px,1fr) 62px minmax(180px,1.6fr) minmax(200px,2fr) 90px 84px}
 .g-log{grid-template-columns:150px minmax(160px,1.2fr) 130px minmax(220px,3fr)}
-.c{display:flex;align-items:center;gap:5px;padding:0 var(--cx);min-height:26px;
+.c{display:flex;align-items:center;gap:6px;padding:0 var(--cx);min-height:30px;
   border-bottom:1px solid var(--line);overflow:hidden}
 /* Шапка: без капслока, розрядки й власного фону — лише одна лінія знизу. */
 .c.h{position:sticky;top:calc(var(--hh) + var(--bh,0px));z-index:20;min-height:25px;padding:0 3px;
   justify-content:center;text-align:center;background:var(--sink);color:var(--dim);
   border-bottom:1px solid var(--edge);font-size:11.5px;font-weight:600}
 .c.ctr{justify-content:center;padding:0 4px}
-/* Ручка виділення — сам знак розрізнення: окремий стовпчик під чекбокси зайвий. */
-.selcell{cursor:pointer}
-.c.selcell:hover .rk>svg,.rk.selcell:hover>svg{color:var(--txt)}
+/* Виділення бере порожнє місце рядка; знак розрізнення при цьому золотіє. */
+.row:not(.vac)>.c{cursor:default}
 .row.sel .rk>svg{color:var(--gold)}
-.c.h.selall{cursor:pointer}
-.c.h.selall.on,.c.h.selall.some{color:var(--gold)}
 .grid.painting{user-select:none}
-.grid.painting .selcell{cursor:ns-resize}
+.grid.painting .row>.c{cursor:ns-resize}
 .c.ctr input.cell{margin:0;width:100%;text-align:center}
 .c.end{justify-content:flex-end;padding-right:8px}
 .c.rt{justify-content:flex-end;font-variant-numeric:tabular-nums}
@@ -174,6 +220,8 @@ header .hsep{width:1px;height:20px;background:var(--line);margin:0 4px;flex:none
 .grid>.c:last-child,.grid>.row:last-child>.c{border-bottom:0}
 .row{display:contents}
 .row:hover>.c{background:var(--panel2)}
+/* Останній рядок групи не потребує лінії — її роль бере проміжок перед чіпом. */
+.g-main>.row:last-child>.c{border-bottom:0}
 .row.tot>.c{background:var(--sink);font-weight:600}
 
 /* кнопка-фільтр у заголовку */
@@ -197,13 +245,14 @@ header .hsep{width:1px;height:20px;background:var(--line);margin:0 4px;flex:none
 /* Підрозділ — чіп посередині: смуга на всю ширину додавала зайву межу,
    а просвіт довкола і так відділяє одну групу від іншої. */
 .unitband{grid-column:1/-1;display:flex;justify-content:center;
-  margin:12px 0 3px;background:none;border:0}
-.uchip{display:inline-flex;align-items:baseline;gap:7px;padding:2px 12px;
+  margin:10px 0;background:none;border:0}
+.uchip{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;
   background:var(--panel2);border:1px solid var(--line);border-radius:999px;
-  color:var(--txt);font-size:12px;font-weight:600;line-height:1.5}
+  color:var(--txt);font-size:13px;font-weight:600;line-height:1.3}
 .uchip .q{font-weight:400;font-size:11px;color:var(--faint)}
 .uchip.on{border-color:var(--dir);color:var(--dir)}
-.ufilt{display:inline-flex;align-items:center;background:none;border:0;padding:0;margin-left:1px;
+.ufilt{display:inline-flex;align-items:center;justify-content:center;background:none;
+  border:0;padding:0;margin:-8px -6px -8px 0;width:30px;height:30px;
   color:var(--faint);cursor:pointer}
 .ufilt:hover{color:var(--gold)}
 .ufilt svg{width:11px;height:11px}
@@ -255,6 +304,7 @@ button.vac.lnk{background:none;border:0;padding:0;font:inherit;font-style:italic
 button.vac.lnk:hover{color:var(--gold);text-decoration:underline;text-underline-offset:2px}
 .chip.main{color:var(--txt)}
 .chip.away{color:var(--warn)}
+mark{background:hsl(45 60% 30%);color:var(--txt);border-radius:3px;padding:0 1px}
 /* поки режим редагування вимкнено — поля лише показують, клік іде на виділення */
 /* офлайн: усе, що пише на сервер, недоступне */
 /* Офлайн: усе, що пише на сервер, недоступне. Читати й копіювати можна. */
@@ -299,7 +349,8 @@ input.cell{width:calc(100% + var(--cx)*2);margin:0 calc(var(--cx)*-1);background
 .pop hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
 #fpop{position:fixed;width:252px;padding:8px}
 #fpop .fopts{max-height:258px;overflow:auto;margin:0 0 7px}
-#fpop label{display:flex;align-items:center;gap:8px;padding:5px 7px;border-radius:4px;cursor:pointer;font-size:13px}
+#fpop label{display:flex;align-items:center;gap:10px;min-height:34px;padding:0 8px;
+  border-radius:8px;cursor:pointer;font-size:13px}
 #fpop label:hover{background:var(--panel)}
 #fpop label span:first-of-type{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #fpop label .cnt{margin-left:auto;color:var(--faint);font-size:11px;font-variant-numeric:tabular-nums}
@@ -310,24 +361,48 @@ input.cell{width:calc(100% + var(--cx)*2);margin:0 calc(var(--cx)*-1);background
 /* ---------- діалоги ---------- */
 dialog{background:var(--panel);color:var(--txt);border:1px solid var(--edge);border-radius:9px;padding:0;
   min-width:min(440px,92vw);max-width:92vw;box-shadow:0 24px 60px rgba(0,0,0,.55)}
-dialog.wide{min-width:min(900px,94vw)}
+dialog{width:min(440px,94vw)}          /* звичайна форма — вузька колонка */
+dialog.wide{width:min(820px,94vw);min-width:0}
 dialog::backdrop{background:rgba(0,0,0,.6)}
-dialog form{padding:18px}
+dialog form{padding:16px}
 dialog h2{margin:0 0 12px;font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--dim)}
-.field{margin-bottom:10px}
+.field{margin-bottom:var(--g)}
 .field label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px}
 .field input,.field select{width:100%}
 /* прапорці й радіо не мають розтягуватись на всю ширину поля */
-.field input[type=radio],.field input[type=checkbox],label.chk input{width:auto;flex:none}
-label.chk.blk{align-items:flex-start;gap:9px}
-label.chk.blk input{margin-top:3px}
+.field input[type=radio],.field input[type=checkbox],label.chk input{flex:none}
+label.chk.blk{align-items:flex-start;gap:10px}
+label.chk.blk input{margin-top:2px}
+/* У спливних меню підписи однорядкові — рівні рядки, як у решті списків. */
+.pop label.chk.blk{align-items:center;min-height:34px;padding:0 8px;border-radius:8px;
+  margin:0;color:var(--txt)}
+.pop label.chk.blk:hover{background:var(--panel)}
+.pop label.chk.blk input{margin-top:0}
+#sopt{padding:6px;min-width:210px}
+#sopt #soHint{padding:4px 9px 2px}
 label.chk.blk .sub{display:block;color:var(--faint);font-size:12px;margin-top:2px}
 label.chk.blk input:disabled+span{color:var(--faint)}
-.two{display:flex;gap:10px} .two>*{flex:1;min-width:0}
+.two{display:flex;gap:var(--g)} .two>*{flex:1;min-width:0}
 .foot{display:flex;align-items:center;gap:8px;margin-top:16px}
 .foot .grow{flex:1}
 #askInput{width:100%}
-label.chk{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--dim);cursor:pointer}
+/* Системні чекбокси не піддаються темі й виглядають чужорідно. Малюємо свої:
+   та сама рамка, що й у полів, і галочка кольором акценту. */
+input[type=checkbox],input[type=radio]{appearance:none;-webkit-appearance:none;
+  width:18px;height:18px;min-height:0;flex:none;margin:0;cursor:pointer;
+  border:1.5px solid var(--edge);border-radius:5px;background:var(--sink);
+  display:inline-grid;place-content:center;transition:border-color .12s,background .12s}
+input[type=radio]{border-radius:50%}
+input[type=checkbox]::before{content:'';width:11px;height:11px;background:var(--gold);
+  transform:scale(0);transition:transform .12s ease-out;
+  clip-path:polygon(14% 44%,0 65%,50% 100%,100% 16%,80% 0,43% 62%)}
+input[type=radio]::before{content:'';width:9px;height:9px;border-radius:50%;
+  background:var(--gold);transform:scale(0);transition:transform .12s ease-out}
+input[type=checkbox]:checked,input[type=radio]:checked{border-color:var(--gold)}
+input[type=checkbox]:checked::before,input[type=radio]:checked::before{transform:scale(1)}
+input[type=checkbox]:hover,input[type=radio]:hover{border-color:var(--dim)}
+input[type=checkbox]:disabled,input[type=radio]:disabled{opacity:.4;cursor:not-allowed}
+label.chk{display:inline-flex;align-items:center;gap:9px;font-size:13px;color:var(--dim);cursor:pointer}
 label.chk.blk{display:flex;padding:6px 0;color:var(--txt)}
 
 /* ---------- імпорт ---------- */
@@ -341,7 +416,7 @@ table.prev td{padding:3px 6px;border-bottom:1px solid var(--line);max-width:230p
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 table.prev select{width:100%;padding:3px 5px;font-size:12px}
 table.prev .hint{color:var(--faint);font-size:10px;margin-top:3px}
-.panes{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.panes{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .pane h3{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
 .plist{min-height:56px;max-height:190px;overflow:auto;border:1px solid var(--line);
   border-radius:var(--r);padding:4px;background:var(--sink);margin-bottom:8px}
@@ -353,8 +428,8 @@ table.prev .hint{color:var(--faint);font-size:10px;margin-top:3px}
 .pform{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;align-items:end}
 .pform label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--faint);min-width:0}
 .pform label.wide2{grid-column:1/-1}
-.pform input,.pform select{width:100%;height:26px}
-.pform .btn{grid-column:1/-1;justify-content:center;height:28px}
+.pform input,.pform select{width:100%}
+.pform .btn{grid-column:1/-1;justify-content:center}
 @media (max-width:720px){ .panes{grid-template-columns:1fr} }
 .hist{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .hist h3{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
@@ -378,6 +453,32 @@ tr.skip td{opacity:.45}
 #tip{position:fixed;z-index:100;background:#0e1013;color:var(--txt);border:1px solid var(--edge);
   border-radius:5px;padding:5px 9px;font-size:12px;pointer-events:none;max-width:290px;
   box-shadow:0 8px 22px rgba(0,0,0,.5)}
+/* Головна дія — окремою круглою кнопкою над острівцем. */
+.fabs{position:fixed;right:14px;bottom:calc(var(--tb,0px) + 22px);z-index:40;
+  display:flex;flex-direction:column;align-items:center;gap:10px}
+.fab{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;border:1px solid var(--edge);background:var(--panel2);
+  color:var(--txt);cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.4)}
+.fab .i{width:18px;height:18px}
+.fab.on{background:var(--panel);color:var(--gold);border-color:var(--gold)}
+.fab.main{width:50px;height:50px;background:var(--gold);border-color:var(--gold);
+  color:#15171a;box-shadow:0 8px 22px rgba(0,0,0,.5)}
+.fab.main .i{width:23px;height:23px}
+/* Меню — компактний список над кнопкою «Ще», без затемнення на весь екран:
+   воно нічого не ховає, а закривається тією ж кнопкою або кліком повз. */
+.sheetwrap{position:fixed;inset:0;z-index:60;background:transparent}
+.sheetbox{position:absolute;right:10px;bottom:calc(var(--tb,0px) + 126px);  /* запасний варіант */
+  width:min(248px, calc(100vw - 20px));display:flex;flex-direction:column;padding:5px;
+  border:1px solid var(--edge);border-radius:13px;
+  background:color-mix(in srgb, var(--panel2) 82%, transparent);
+  backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);
+  box-shadow:0 12px 30px rgba(0,0,0,.55)}
+.mi{display:flex;align-items:center;gap:9px;width:100%;height:44px;padding:0 11px;
+  background:none;border:0;border-radius:8px;color:var(--txt);font:inherit;font-size:13px;
+  text-align:left;cursor:pointer}
+.mi:hover,.mi:active{background:rgba(255,255,255,.07)}
+.mi .i{width:15px;height:15px;color:var(--faint);flex:none}
+.mi.danger{color:var(--danger)} .mi.danger .i{color:var(--danger)}
 #netbar{position:sticky;top:var(--hh);z-index:26;display:flex;align-items:center;gap:8px;
   padding:4px 12px;background:hsl(38 34% 16%);color:var(--warn);
   border-bottom:1px solid hsl(38 30% 26%);font-size:12px}
@@ -408,14 +509,15 @@ tr.skip td{opacity:.45}
   .wrap{overflow-x:auto}
   .wrap .tables{min-width:0}
   .wrap .g-rep{min-width:800px}
-  .wrap .g-out,.wrap .g-log{min-width:680px}
+  .wrap .g-out{min-width:740px}
+  .wrap .g-log{min-width:664px}
   .acts{opacity:1}
   .c.h{position:static;top:auto}   /* не липне — і не має зсуватись від top */
 }
 
 /* ---------- телефон: підрозділ + ПІБ, решту несе колір ---------- */
 @media (max-width:720px){
-  main{padding:6px 6px 32px}
+  main{padding:8px 8px 32px}
   /* три зони на телефоні не потрібні — пошук на всю ширину */
   .bar{display:flex;flex-wrap:wrap;margin:0 -6px 6px;padding:5px 6px}
   .bar .search{width:100%;max-width:none;margin:0;order:1}
@@ -428,20 +530,66 @@ tr.skip td{opacity:.45}
   .bar .mid{width:100%}
   .bar .mid .search{width:100%}
   /* штатка й напрями — кожне своїм рядком, напрями гортаються */
-  /* два ряди замість трьох: зверху штатка й напрями, знизу вкладки */
-  header{padding:4px 6px;gap:4px}
-  header #fSheet{flex:0 1 auto;max-width:46%;order:1}
-  header .seg{order:2;flex:1 1 auto;min-width:0}
-  header .tabs{order:3;width:100%;justify-content:space-between}
-  header .btn{order:4}
+  /* Шапки на телефоні немає зовсім: усе керування зібране в нижньому
+     острівці, а звільнене місце віддане списку. */
+  header{display:none}
+  :root{--hh:0px}
+  /* Острівець, а не чорна плашка на всю ширину: під ним видно список, і
+     зрозуміло, що це плаваючий елемент, а не край екрана. */
+  /* Рамки немає, скруглення крупне, фон помітно прозоріший — інакше розмиття
+     під ним просто не видно і острівець виглядає як звичайна плашка. */
+  .dockveil{position:fixed;left:0;right:0;bottom:0;z-index:34;pointer-events:none;
+    height:calc(var(--tb,64px) + 64px);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    background:linear-gradient(to top,
+      color-mix(in srgb, var(--bg) 92%, transparent) 30%, transparent 100%);
+    -webkit-mask-image:linear-gradient(to top, #000 45%, rgba(0,0,0,.5) 72%, transparent);
+    mask-image:linear-gradient(to top, #000 45%, rgba(0,0,0,.5) 72%, transparent)}
+  .dock{position:fixed;left:10px;right:10px;z-index:35;display:flex;flex-direction:column;
+    gap:5px;bottom:calc(8px + env(safe-area-inset-bottom));padding:6px;
+    border:0;border-radius:22px;
+    background:color-mix(in srgb, var(--panel2) 58%, transparent);
+    backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);
+    box-shadow:0 12px 30px rgba(0,0,0,.45)}
+  .dock .search{display:flex;width:100%;margin:0;border-radius:14px}
+  .dock .seg{width:100%;justify-content:stretch;background:none;border:0;padding:0;gap:3px}
+  .dock .seg{border:0;background:none}
+  .dock .seg button{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;padding:6px 8px;border-radius:14px;background:none;
+    color:var(--faint);font-size:12.5px}
+  .dock .seg button.on{color:var(--txt);font-weight:700}
+  .dock .seg .ind{background:rgba(255,255,255,.11);border-radius:14px}
+  .dock .seg button.on{background:none;color:var(--txt);font-weight:600}
+  .dock .seg:only-child,.dock .seg[hidden]{display:none}
+  /* margin-left:auto з ширшого брейкпоінта тут стискав ряд до вмісту */
+  .dock .tabs{margin-left:0;width:100%;justify-content:space-around;gap:2px;padding:0}
+  .tabs button{position:relative;flex:1;flex-direction:column;gap:2px;min-height:46px;
+    padding:5px 1px;font-size:10px;border-radius:16px;min-width:0}
+  /* Активна вкладка з заливкою: самим лише кольором підпису її не видно. */
+  /* На напівпрозорому острівці «var(--panel)» майже не відрізняється від
+     фону — активний стан беремо світлішим шаром, однаковим для обох рядів. */
+  .dock .tabs button.on{background:rgba(255,255,255,.11);color:var(--txt)}
+  .dock .tabs button{color:var(--faint)}
+  .dock .tabs button.on .i{color:var(--txt)}
+  .tabs .lb{display:block;font-size:9.5px;line-height:1.1;overflow:hidden;
+    text-overflow:ellipsis;max-width:100%;white-space:nowrap}
+  .tabs .n{position:absolute;top:1px;right:calc(50% - 20px);font-size:9px;padding:0 4px}
+  .tabs .more.on{background:rgba(255,255,255,.11);color:var(--txt)}
+  /* місця знизу рівно стільки, щоб останній рядок вийшов з-під острівця й кнопки */
+  main{padding-bottom:calc(var(--tb,64px) + 130px)}
+  header .seg{flex:1 1 auto;min-width:0}
   .bar{gap:5px}
   .seg{max-width:100%;overflow-x:auto;justify-content:flex-start;scrollbar-width:none}
   .seg::-webkit-scrollbar{display:none}
   .seg button{padding:4px 9px;font-size:12px;flex:none}
   /* телефон — режим перегляду: редагування, додавання, файли й дії в рядках приховані */
   .grp.desk{display:none}
+  /* Пошук цих екранів переїхав у док, більше в панелі нічого немає — сама
+     смуга з фоном і межею лишалася порожньою плашкою вгорі. */
+  #viewC .bar,#viewD .bar,#viewL .bar{display:none}
+  #viewR .bar{background:none;border:0;padding:6px 0;margin:0}
+  .tabs .more{display:flex}
   .bar .mid .btn.desk{display:none}
-  .macts .ico:not(.call){display:none}   /* дзвінок лишаємо — це перегляд, не правка */
   /* підсумок одним рядком, без коробок */
   .sum{border:0;gap:0;flex-wrap:wrap;width:100%;overflow:visible}
   .sum .cell{border:0;background:none;padding:1px 10px 1px 0;min-width:0;display:flex;
@@ -454,25 +602,56 @@ tr.skip td{opacity:.45}
   .wrap .tables{min-width:0}
   /* картковий звіт не має тягнути сторінку вшир */
   .wrap .g-rep{min-width:0}
-  .rg{grid-template-columns:1fr}
-  .g-main{grid-template-columns:minmax(0,1fr) auto;width:100%}
-  .unitband{margin:8px 0 2px}
+  /* Вибулі й журнал лишаються таблицями — хай гортаються всередині свого
+     блоку, а не тягнуть сторінку вбік разом із нижнім острівцем. */
+  #viewD .wrap,#viewL .wrap{overflow-x:auto}
+  .wrap .g-out{min-width:740px}
+  .wrap .g-log{min-width:664px}
+  /* Друга колонка фіксована: з auto її ширина залежала від того, у кого з
+     показаних є телефон, і пошук зсував увесь макет. */
+  /* .tables центрує дітей, тож без цього таблиця стискалася до вмісту
+     і ширина стрибала на кожен пошук. */
+  .tables{align-items:stretch}
+  .tbl{width:100%}
+  .g-main{grid-template-columns:minmax(0,1fr);width:100%}
+  .unitband{margin:10px 0}          /* однаково згори й знизу */
   .g-main .pos .t,.g-main .nm{max-width:none}
   .g-main .detail{grid-column:1/-1}
   .tables{gap:10px}
-  .c{min-height:30px;padding:0 6px}
-  .m2{flex-direction:column;align-items:flex-start;justify-content:center;gap:0;padding:3px 6px}
+  .c{min-height:40px;padding:0 8px}
+  .m2{flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;padding:5px 8px}
   .m2 .l1{display:flex;align-items:center;gap:6px;width:100%;min-width:0}
+  /* прізвище й номер — теж кнопки, тож даємо їм висоту пальця */
+  .m2 .nm.lnk{padding:5px 0}
+  .m2 .l2 .ph,.c.pibcell .ph{padding:6px 2px}
+  .dock .seg button{min-height:34px}
   .m2 .l1 .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
   .m2 .l1 input.cell{padding:2px 0;border:0}
-  .m2 .l2{font-size:10.5px;line-height:1.3;color:var(--faint);overflow:hidden;
-    text-overflow:ellipsis;white-space:nowrap;width:100%}
+  .m2 .l2{display:flex;align-items:baseline;gap:8px;font-size:11px;line-height:1.35;
+    color:var(--faint);width:100%;min-width:0}
+  .m2 .l2>:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .m2 .l2 .ph{margin-left:auto;padding:4px 0;font-size:11.5px}
   .m2 .rk{width:auto;height:21px;flex:none}
   .m2 .rk>svg{width:17px;height:21px}
-  .macts{display:flex;align-items:center;padding:0 2px 0 0}
-  .macts .ico{width:24px;height:24px}
-  dialog,dialog.wide{min-width:0;width:96vw}
-  dialog form{padding:12px}
+  /* Модалка на телефоні — аркуш на весь екран: у два стовпчики поля
+     стискалися до нечитабельного, а рамки з'їдали і без того вузьку ширину. */
+  /* Висота за вмістом, але не вище видимої частини: із фіксованою 100dvh
+     модалка стрибала щоразу, коли з'являлась і зникала клавіатура. */
+  dialog,dialog.wide{min-width:0;width:100vw;max-width:100vw;max-height:100dvh;
+    height:auto;margin:auto 0 0;border:0;border-radius:14px 14px 0 0}
+  dialog form{padding:12px 12px calc(12px + env(safe-area-inset-bottom));
+    max-height:100dvh;display:flex;flex-direction:column;overflow:auto;
+    scroll-padding-bottom:80px}
+  dialog input,dialog select,dialog textarea{scroll-margin-bottom:90px}
+  dialog .panes{grid-template-columns:1fr;gap:10px}
+  dialog .pform,dialog .pform.cardtop{grid-template-columns:1fr;gap:8px}
+  dialog .two{flex-direction:column;gap:0}
+  dialog .plist{max-height:none;border:0;padding:0;background:none}
+  dialog .plist .line{flex-wrap:wrap;padding:6px 0}
+  dialog .foot{position:sticky;bottom:0;background:var(--panel);
+    padding-top:10px;margin-top:auto}
+  .cardacts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .cardacts .btn{justify-content:center}
 }
 </style>
 </head>
@@ -519,14 +698,15 @@ tr.skip td{opacity:.45}
 </div>
 
 <header>
-  <span class="grow"></span>
-  <div class="seg" id="sheetSeg" aria-label="Штатка"></div>
-  <button class="btn ico2" id="renSheet" onclick="renameSheet()" data-tip="Перейменувати штатку"
-    ><svg class="i"><use href="#i-edit"/></svg></button>
-  <span class="grow"></span>
+  <div class="hgrp">
+    <div class="seg" id="sheetSeg" aria-label="Штатка"></div>
+    <button class="btn ico2" id="renSheet" onclick="renameSheet()"
+      ><svg class="i"><use href="#i-edit"/></svg></button>
+  </div>
+  <!-- вкладки по центру — на тій самій осі, що й пошук у панелі нижче -->
   <nav class="tabs">
     <button id="tabC" class="on" onclick="showTab('c')">
-      <svg class="i"><use href="#i-users"/></svg><span class="lb">Склад</span><span class="n num" id="nC"></span></button>
+      <svg class="i"><use href="#i-users"/></svg><span class="lb">Штат</span></button>
     <button id="tabR" onclick="showTab('r')">
       <svg class="i"><use href="#i-rep"/></svg><span class="lb">Звіт</span></button>
     <button id="tabD" onclick="showTab('d')">
@@ -534,11 +714,12 @@ tr.skip td{opacity:.45}
     <button id="tabL" onclick="showTab('l')">
       <svg class="i"><use href="#i-log"/></svg><span class="lb">Журнал</span></button>
   </nav>
-  <span class="hsep"></span>
-  <button class="btn ico2 danger-ghost" onclick="openReset()" data-tip="Скинути дані"
-    ><svg class="i"><use href="#i-trash"/></svg></button>
-  <button class="btn ico2" onclick="logout()" data-tip="Вийти"
-    ><svg class="i"><use href="#i-out"/></svg></button>
+  <div class="hgrp end">
+    <button class="btn ico2 danger-ghost" onclick="openReset()"
+      ><svg class="i"><use href="#i-trash"/></svg></button>
+    <button class="btn ico2" onclick="logout()"
+      ><svg class="i"><use href="#i-out"/></svg></button>
+  </div>
 </header>
 
 <main>
@@ -549,30 +730,38 @@ tr.skip td{opacity:.45}
         <span class="selnote" id="selNote" hidden></span>
       </div>
       <div class="mid">
-        <button class="btn ico2 desk" onclick="openNew()" data-tip="Додати людину"
+        <button class="btn ico2 desk" onclick="openNew()"
           ><svg class="i"><use href="#i-plus"/></svg></button>
         <button class="btn ico2 desk" id="massBtn" onclick="openMass()" disabled
-          data-tip="Відсутність для виділених"><svg class="i"><use href="#i-cal"/></svg></button>
+         ><svg class="i"><use href="#i-cal"/></svg></button>
         <label class="search">
           <svg class="i"><use href="#i-search"/></svg>
           <input type="search" id="fSearch" placeholder="Пошук…" oninput="renderAll()">
-          <button class="sopt" id="soptBtn" onclick="toggleSopt(event)" data-tip="Опції пошуку">Aa</button>
+          <button class="sopt" id="soptBtn" onclick="toggleSopt(event)">Aa</button>
         </label>
-        <button class="btn ico2 desk" onclick="openImport()" data-tip="Імпорт таблиці"
+        <button class="btn ico2 desk" onclick="openImport()"
           ><svg class="i"><use href="#i-import"/></svg></button>
-        <button class="btn ico2 desk" onclick="openOut()" data-tip="Поділитися: копія або файл"
+        <button class="btn ico2 desk" onclick="openOut()"
           ><svg class="i"><use href="#i-share"/></svg></button>
       </div>
       <div class="grp end">
         <button class="btn" id="fClear" onclick="clearFilters()" hidden>Скинути</button>
       </div>
     </div>
-    <div class="wrap"><div class="tables" id="gMain"></div></div>
+    <div class="wrap swipe">
+      <div class="tables" id="gMain"></div>
+      <!-- Сусідня штатка: живе поруч і виїжджає з краю під час жесту. -->
+      <div class="tables peek" id="gPeek" hidden></div>
+    </div>
   </section>
 
   <!-- Звіт -->
   <section id="viewR" hidden>
     <div class="bar plain">
+      <label class="search">
+        <svg class="i"><use href="#i-search"/></svg>
+        <input type="search" id="rSearch" placeholder="Пошук підрозділу…" oninput="renderReport()">
+      </label>
       <span class="small dim" id="repNote"></span>
       <span class="grow"></span>
       <button class="btn" onclick="exportReport()"><svg class="i"><use href="#i-down"/></svg>Звіт у XLSX</button>
@@ -836,6 +1025,21 @@ tr.skip td{opacity:.45}
   </form>
 </dialog>
 
+<!-- Телефон: дії внизу під великим пальцем, а не смугою вгорі. -->
+<!-- Сюди на телефоні переїжджають пошук, перемикач штаток і вкладки. -->
+<!-- Завіса за нижніми кнопками: розмиття й затемнення згасають догори,
+     тож список не обривається різкою межею панелі. -->
+<div class="dockveil" id="dockveil" hidden></div>
+<div class="dock" id="dock" hidden></div>
+<div class="fabs" id="fabs" hidden>
+  <button class="fab" id="moreBtn" onclick="toggleSheetMenu(event)" aria-expanded="false"
+   ><svg class="i"><use href="#i-dots"/></svg></button>
+  <button class="fab main" onclick="openNew()"
+    ><svg class="i"><use href="#i-plus"/></svg></button>
+</div>
+<div class="sheetwrap" id="sheetMenu" hidden onclick="closeSheetMenu(event)">
+  <div class="sheetbox" id="sheetActions" onclick="event.stopPropagation()"></div>
+</div>
 <div id="netbar" hidden></div>
 <div id="toast" hidden></div>
 
@@ -1026,22 +1230,17 @@ keyInput.addEventListener('keydown',e=>{ if(e.key==='Enter') tryLogin(); });
 let POSTS=[], PERSONS=[], LOGS=[], TAB='c';
 /* Напрями — набір прапорців, а не один вибір: штатний РЕБ буває позаштатним
    МРТ, тож дивитись на два одразу треба часто. Порожній набір = усі. */
-function readDirs(){
-  const raw = localStorage.getItem('dir');
-  if(raw === null) return new Set(['МРТ']);            // типово показуємо МРТ
-  if(raw.startsWith('[')){
-    try{ return new Set(JSON.parse(raw)); }catch(_){ return new Set(); }
-  }
-  return new Set(raw ? [raw] : []);                    // старий формат: один рядок
-}
-const DIRS = readDirs();
-const saveDirs = () => localStorage.setItem('dir', JSON.stringify([...DIRS]));
+/* Вибір напряму не переживає перезавантаження — як і вибір штатки: щоразу
+   відкриваємось із підсвіченим МРТ, бо саме з ним працюють щодня. */
+const DIRS = new Set(['МРТ']);
+const saveDirs = () => {};
 const anyDir = () => DIRS.size > 0;
 const dirOn = tag => DIRS.size === 0 || DIRS.has(tag);
 const dirLabel = () => [...DIRS].join('/');
 /* Показуємо завжди одну штатку: «разом» плутало підсумки й ширину колонок.
-   null означає «ще не обрано» — перша штатка стане поточною при завантаженні. */
-let SHEET = localStorage.getItem('sheet');
+   Вибір не переживає перезавантаження — застосунок щоразу відкривається з
+   першої (основної) штатки, а не з тієї, на якій ви колись зупинилися. */
+let SHEET = null;
 const $ = id => document.getElementById(id);
 const esc = s => (s??'').toString().replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const active = p => p.status==='active';
@@ -1125,6 +1324,26 @@ function makeMatcher(q){
     return new RegExp(lit, flags);
   }catch(_){ return 'bad'; }
 }
+/* Підсвітка збігу. Текст екрануємо самі, бо повертаємо готовий HTML;
+   у режимі «ціле слово» шаблон захоплює й сусідні символи, тож підсвічуємо
+   лише те, що між ними. */
+function hl(text, rx){
+  const t = String(text ?? '');
+  if(!rx || rx === 'bad' || !t) return esc(t);
+  let out = '', last = 0;
+  const g = new RegExp(rx.source, rx.flags.includes('g') ? rx.flags : rx.flags + 'g');
+  for(const m of t.matchAll(g)){
+    if(!m[0]) break;
+    let from = m.index, len = m[0].length;
+    if(SOPT.word){                       // прибираємо межові символи з підсвітки
+      if(m[1]){ from += m[1].length; len -= m[1].length; }
+      if(m[2]) len -= m[2].length;
+    }
+    out += esc(t.slice(last, from)) + '<mark>' + esc(t.substr(from, len)) + '</mark>';
+    last = from + len;
+  }
+  return out + esc(t.slice(last));
+}
 function searchHit(rx, text){
   if(rx === 'bad') return false;
   rx.lastIndex = 0;
@@ -1191,7 +1410,17 @@ async function reload(){
 }
 
 /* ================= НАВІГАЦІЯ ================= */
+/* Один рух на всі переходи: новий екран проявляється й трохи підіймається.
+   Висоту не анімуємо — саме вона й давала стрибки. */
+const REDUCED = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+function enterView(el, dx){
+  if(!el || !el.animate || REDUCED()) return;
+  el.animate([{opacity:0, transform:dx ? `translateX(${dx}px)` : 'translateY(6px)'},
+              {opacity:1, transform:'none'}],
+    {duration:170, easing:'cubic-bezier(.2,.7,.3,1)'});
+}
 function showTab(t){
+  const changed = TAB !== t;
   TAB = t;
   for(const k of ['c','r','d','l']){
     $('view'+k.toUpperCase()).hidden = t!==k;
@@ -1201,7 +1430,12 @@ function showTab(t){
   $('sheetSeg').hidden = !scoped || sheets().length < 2;
   if(t!=='c') clearSel();   // штатка й напрям стосуються складу і звіту
   if(t==='l') loadLog(); else renderAll();
-  measureChrome();
+  $('fabs').hidden = !MOB() || TAB !== 'c';
+  layoutDock();
+  if(changed){
+    scrollTo({top:0});           // новий екран починається згори, а не з середини
+    enterView($('view'+t.toUpperCase()));
+  }
 }
 function toggleDir(t){
   DIRS.has(t) ? DIRS.delete(t) : DIRS.add(t);
@@ -1226,12 +1460,23 @@ async function renameSheet(){
   try{
     const r = await api('sheets/rename', {method:'POST',
       body:JSON.stringify({from:cur, to:name.trim()})});
-    SHEET = name.trim(); localStorage.setItem('sheet', SHEET);
+    SHEET = name.trim();
     await reload();
     toast(r.posts ? `Перейменовано, посад: ${r.posts}` : 'Жодної посади не змінено', !r.posts);
   }catch(e){ toast(e.message, true); }
 }
-function setSheet(s){ SHEET=s; localStorage.setItem('sheet',s); fillScope(); renderAll(); }
+function setSheet(s){ SHEET=s; fillScope(); renderAll(); }
+/* Повзунок їде під обрану штатку — інакше після свайпу не видно, куди саме
+   перемкнулись: колір активної кнопки змінюється миттєво й непомітно. */
+function moveInd(){
+  const seg = $('sheetSeg');
+  if(!seg) return;                       // виклик із rAF може застати перемальовування
+  const ind = seg.querySelector('.ind'), on = seg.querySelector('button.on');
+  if(!ind || !on) return;
+  ind.style.width = on.offsetWidth + 'px';
+  ind.style.transform = `translateX(${on.offsetLeft - seg.clientLeft}px)`;
+  ind.style.opacity = '1';
+}
 function clearFilters(){
   for(const k in F) F[k] instanceof Set ? F[k].clear() : (F[k]='');
   $('fSearch').value='';
@@ -1263,7 +1508,7 @@ addEventListener('online', ()=>{ setOnline(true); reload().catch(()=>setOnline(f
 let wasBand = band();
 addEventListener('resize', ()=>{
   hideTip();
-  if(band() !== wasBand){ wasBand = band(); renderAll(); }
+  if(band() !== wasBand){ wasBand = band(); layoutDock(); renderAll(); }
 });
 
 /* Окремого режиму редагування немає: таблиця показує, а правка людини живе
@@ -1276,26 +1521,40 @@ function applyOffline(){ document.body.classList.toggle('offline', !ONLINE); }
 /* Спостерігач за розміром сам змінює розмір: запис у --hh/--bh зсуває липкі
    елементи, ті знову смикають спостерігача. На телефоні це давало вічне
    тремтіння на пару пікселів. Пишемо, тільки коли значення справді інше. */
-let lastHH = -1, lastBH = -1;
+let lastHH = -1, lastBH = -1, lastTB = -1;
 function measureChrome(){
   const h = document.querySelector('header');
   const bar = [...document.querySelectorAll('.bar')].find(b=>b.offsetParent !== null);
   const hh = Math.round(h ? h.offsetHeight : 44);
   const bh = Math.round(bar ? bar.offsetHeight : 0);
+  const dock = document.getElementById('dock');
+  const tb = MOB() && dock && !dock.hidden ? Math.round(dock.offsetHeight) : 0;
+  if(tb !== lastTB){ lastTB = tb; document.documentElement.style.setProperty('--tb', tb+'px'); }
   const st = document.documentElement.style;
   if(hh !== lastHH){ lastHH = hh; st.setProperty('--hh', hh+'px'); }
   if(bh !== lastBH){ lastBH = bh; st.setProperty('--bh', bh+'px'); }
 }
 const chromeRO = new ResizeObserver(()=>requestAnimationFrame(measureChrome));
 
+/* Ставить спливне вікно біля кнопки: під нею, а якщо там немає місця —
+   над нею. З пошуком унизу екрана «під кнопкою» майже завжди за межами. */
+function placePop(pop, anchor, align){
+  pop.style.visibility = 'hidden'; pop.hidden = false;
+  const r = anchor.getBoundingClientRect();
+  const w = pop.offsetWidth, h = pop.offsetHeight, gap = 6;
+  const left = align === 'right' ? r.right - w : r.left;
+  pop.style.left = Math.round(Math.max(6, Math.min(left, innerWidth - w - 6))) + 'px';
+  const below = innerHeight - r.bottom - gap;
+  pop.style.top = Math.round(below >= h || below >= r.top
+    ? Math.min(r.bottom + gap, innerHeight - h - 6)
+    : Math.max(6, r.top - gap - h)) + 'px';
+  pop.style.visibility = '';
+}
 function toggleSopt(e){
   e.preventDefault(); e.stopPropagation();
   const pop = $('sopt');
-  pop.hidden = !pop.hidden;
-  if(pop.hidden) return;
-  const r = e.currentTarget.getBoundingClientRect();
-  pop.style.left = Math.max(6, Math.min(r.right-210, innerWidth-216))+'px';
-  pop.style.top = (r.bottom+6)+'px';
+  if(!pop.hidden){ pop.hidden = true; return; }
+  placePop(pop, e.currentTarget, 'right');
 }
 function setSopt(){
   SOPT.case = $('soCase').checked; SOPT.word = $('soWord').checked; SOPT.re = $('soRe').checked;
@@ -1390,7 +1649,11 @@ function fillScope(){
   if(!sh.includes(SHEET)) SHEET = sh[0] ?? '';
   // Перемикач, а не список: штаток одиниці, і видно одразу, яка зараз відкрита.
   $('sheetSeg').innerHTML = sh.map(x=>`<button class="${x===SHEET?'on':''}"
-      onclick="setSheet('${esc(x).replace(/'/g,"\\'")}')">${esc(sheetName(x))}</button>`).join('');
+      onclick="setSheet('${esc(x).replace(/'/g,"\\'")}')">${esc(sheetName(x))}</button>`).join('')
+    + '<span class="ind" aria-hidden="true"></span>';
+  // Прямий виклик: offsetWidth і так змушує браузер порахувати розкладку, а от
+  // rAF може не встигнути до першого показу — і повзунок лишиться в кутку.
+  moveInd();
   $('sheetSeg').hidden = sh.length < 2;
   // перемикач показуємо завжди — інакше не видно, що штаток може бути кілька
   $('sheetList').innerHTML = sh.filter(Boolean).map(s=>`<option>${esc(s)}</option>`).join('');
@@ -1426,10 +1689,7 @@ function openDirFilter(ev){
     + `<div class="ff" style="margin-top:8px">
         <button class="btn" onclick="clearDirs()">Скинути</button>
         <button class="btn primary" onclick="closeFilter()">Готово</button></div>`;
-  pop.hidden = false;
-  const r = ev.currentTarget.getBoundingClientRect();
-  pop.style.left = Math.max(6, Math.min(r.left, innerWidth-240))+'px';
-  pop.style.top = Math.min(r.bottom+4, innerHeight-100)+'px';
+  placePop(pop, ev.currentTarget);
 }
 function clearDirs(){ DIRS.clear(); saveDirs(); renderDirSeg(); renderAll(); closeFilter(); }
 
@@ -1526,8 +1786,8 @@ function tableHtml(b, named){
     // Лійка тут же, у чіпі: власної колонки в підрозділу немає, а фільтрувати
     // хочеться саме звідси, дивлячись на назву.
     body.push(`<div class="unitband"><span class="uchip${fActive('unit')?' on':''}">
-      ${esc(g.unit)}${q ? `<span class="q num">${q}</span>` : ''}
-      <button class="ufilt" data-tip="Фільтр за підрозділом"
+      ${hl(g.unit, RX())}${q ? `<span class="q num">${q}</span>` : ''}
+      <button class="ufilt"
         onclick="openFilter(event,'unit')">${icon('filter')}</button></span></div>`);
     for(const e of g.entries){
       const k = rowKey(e);
@@ -1579,18 +1839,27 @@ function colTemplate(){
        + (NARROW() ? '' : `minmax(0,${px(cert,110,220)}px) `) + '40px';
   return COLW;
 }
+// Матчер поточного пошуку — щоб не збирати його для кожного рядка окремо.
+let RXCUR = null;
+const RX = () => RXCUR;
 function renderMain(){
+  RXCUR = makeMatcher($('fSearch').value);
   const groups = buildGroups();
   ORDER = []; RMAP = new Map();
   const out = blocksOf(groups).map(b => tableHtml(b, false));
   if(!groups.length){
-    out.push(POSTS.length||PERSONS.length
+    /* Порожній результат лишається всередині таблиці: якщо прибрати сітку
+       цілком, макет схлопується, і кожен невдалий пошук смикає сторінку. */
+    const body = MOB() ? [] : [cols().map(hcell).join('')];
+    body.push(POSTS.length||PERSONS.length
       ? '<div class="empty">Нічого не знайдено за поточними фільтрами</div>'
       : `<div class="empty">Даних ще немає.<br>
          <button class="btn primary" onclick="openImport()">${icon('up')}Імпортувати таблицю</button></div>`);
+    out.push(`<section class="tbl"><div class="grid g-main">${body.join('')}</div></section>`);
   }
   $('gMain').innerHTML = out.join('');
   // Ширини не залежать від фільтрів, тож ставимо їх однакові всім таблицям.
+  moveInd();
   const tpl = MOB() ? '' : colTemplate();
   for(const g of $('gMain').querySelectorAll('.g-main')) g.style.gridTemplateColumns = tpl;
   $('fClear').hidden = !anyFilter();
@@ -1617,12 +1886,7 @@ function hcell(c){
       onclick="openDirFilter(event)"><span>${esc(c.t)}</span>${headStat(c.k)}
       ${icon('filter')}</button></div>`;
   }
-  // Колонка звань — ручка виділення, тож її заголовок бере всіх одразу.
-  if(c.k === 'rank'){
-    const all = ORDER.length && SEL.size === ORDER.length;
-    return `<div class="c h ctr selall${all?' on':(SEL.size?' some':'')}"
-      data-tip="Виділити всі показані" onmousedown="toggleAll(event)">${esc(c.t)}</div>`;
-  }
+  if(c.k === 'rank') return `<div class="c h ctr">${esc(c.t)}</div>`;
   const ctr = c.k==='rank' ? ' ctr' : '';       // заголовок над центрованою колонкою
   return `<div class="c h${ctr}"><button class="fh${fActive(c.k)?' on':''}"
     onclick="openFilter(event,'${c.k}')"><span>${esc(c.t)}</span>${headStat(c.k)}</button></div>`;
@@ -1635,30 +1899,25 @@ function rowHtmlMob(e, k, i){
   const cls = ['row', lit?'tint':'', lit&&p?'on':'', (post&&!p)?'vac':'', e.abs?'away':'']
     .filter(Boolean).join(' ');
   const attrs = ` style="--rh:${hueOf(tag)}" data-k="${k}" data-i="${i}"`;
-  const sub = [post ? post.position : (p.position||''), e.abs ? absName(e.abs.kind) : '',
-               p && p.phone ? phoneLocal(p.phone) : ''].filter(Boolean).join(' · ');
+  const sub = [post ? post.position : (p.position||''),
+               e.abs ? absName(e.abs.kind) : ''].filter(Boolean).join(' · ');
 
   if(post && !p){
     return `<div class="${cls}"${attrs}>
       <div class="c m2">
-        <div class="l1"><span class="rk selcell"></span><button class="nm vac lnk"
+        <div class="l1"><span class="rk"></span><button class="nm vac lnk"
           onclick="openNew('${post.id}')">вакансія</button></div>
         <div class="l2">${esc(sub)}</div>
-      </div>
-      <div class="c macts"></div></div>`;
+      </div></div>`;
   }
-  // На телефоні найкорисніша дія — подзвонити.
-  const call = p.phone
-    ? `<a class="ico call" href="tel:${esc(p.phone.replace(/[^\d+]/g,''))}"
-         data-tip="Подзвонити ${esc(p.phone)}">${icon('phone')}</a>` : '';
-  const acts = call;
+  /* Окрема кнопка дзвінка зайва: номер і є посиланням, а що з ним робити —
+     подзвонити, написати, скопіювати — вирішує системне меню. */
   return `<div class="${cls}"${attrs}>
     <div class="c m2">
       <div class="l1">${rankFace(e)}<span class="nm mono lnk"
-        onclick="openCard('${p.id}')">${esc(showPIB(p.pib))}</span></div>
-      <div class="l2">${esc(sub)}</div>
+        onclick="openCard('${p.id}')">${hl(showPIB(p.pib), RX())}</span></div>
+      <div class="l2">${hl(sub, RX())}${phoneCell(p)}</div>
     </div>
-    <div class="c macts">${acts}</div>
   </div>`;
 }
 function rowHtml(e, k, i){
@@ -1676,21 +1935,21 @@ function rowHtml(e, k, i){
     return `<div class="${cls}"${hue}${dat}>
       ${tagCell(tag)}
       <div class="c pos"><span class="t">${esc(post.position)}</span></div>
-      <div class="c ctr selcell"></div>
+      <div class="c ctr"></div>
       <div class="c"><button class="chip vac lnk" data-tip="Поставити людину на цю посаду"
         onclick="openNew('${post.id}')">вакансія</button></div>
       <div class="c"></div>${NARROW() ? '' : '<div class="c"></div>'}
       <div class="c end"></div></div>`;
   }
   const head = post
-    ? `${tagCell(tag)}<div class="c pos"><span class="t">${esc(post.position)}</span></div>`
+    ? `${tagCell(tag)}<div class="c pos"><span class="t">${hl(post.position, RX())}</span></div>`
     : `<div class="c"></div>
-       <div class="c pos"><span class="t">${esc(p.position)}</span></div>`;
+       <div class="c pos"><span class="t">${hl(p.position, RX())}</span></div>`;
   return `<div class="${cls}"${hue}${dat}>
     ${head}
     ${rankCell(p, e)}
     <div class="c pibcell"><span class="nm mono lnk"
-      onclick="openCard('${p.id}')">${esc(showPIB(p.pib))}</span>${phoneCell(p)}</div>
+      onclick="openCard('${p.id}')">${hl(showPIB(p.pib), RX())}</span>${phoneCell(p)}</div>
     <div class="c">${stateChip(e)}</div>
     ${NARROW() ? '' : `<div class="c">${certChip(p)}</div>`}
     <div class="c end"></div>
@@ -1705,9 +1964,9 @@ function rankFace(e){
   const known = e.rank, svg = known ? rankSvg(known) : '';
   // Солдат і рекрут знаків не мають — клітинка лишається порожньою, а не з текстом.
   const face = svg || (known ? '' : `<span class="raw">${esc(e.rankRaw||'')}</span>`);
-  return `<div class="rk selcell" data-tip="${esc(e.rankRaw||'звання не вказано')}">${face}</div>`;
+  return `<div class="rk" data-tip="${esc(e.rankRaw||'звання не вказано')}">${face}</div>`;
 }
-function rankCell(p, e){ return `<div class="c ctr selcell">${rankFace(e)}</div>`; }
+function rankCell(p, e){ return `<div class="c ctr">${rankFace(e)}</div>`; }
 function stateChip(e){
   if(!e.abs) return '<span class="dim">—</span>';
   const a = e.abs;
@@ -1764,57 +2023,38 @@ function sumRows(rows){
 const reportTotals = () => sumRows(reportRows());
 const pct = (a,b) => b ? Math.round(a/b*100)+'%' : '—';
 
-/* На телефоні дев'ять числових колонок не влазять, а бічна прокрутка в
-   звіті найгірша — тому картка на підрозділ із парами «підпис — число». */
+/* На телефоні лишаємо таблицю — підрозділ зліва, як і просили, — але з
+   чотирьох найпотрібніших колонок: решта є у звіті на комп'ютері та в XLSX. */
+const REP_FULL = [['Підрозділ',0],['За штатом','shtat'],['Штатних','shtatni'],
+  ['Вакансій','vac'],['Позаштатних','poza'],['За списком','spysok'],
+  ['Відсутніх','absent'],['В наявності','nayav'],['Укомпл.',0]];
+const REP_MOB = [['Підрозділ',0],['Штат','shtat'],['Наявн.','nayav'],['%',0]];
+const repCols = () => MOB() ? REP_MOB : REP_FULL;
 function repNoteText(){
   return `${sheetName(SHEET)}${anyDir() ? ' · ' + dirLabel() : ''} · ${today()}`;
 }
-function renderReportMob(rows, t){
-  const cell = (l, v, cls) => `<div class="rc${cls?' '+cls:''}"><span>${l}</span><b>${v}</b></div>`;
-  const card = r => `<div class="rcard">
-      <div class="rh">${esc(r.unit)}</div>
-      <div class="rg">
-        ${cell('за штатом', r.shtat)}
-        ${cell('штатних', r.shtatni)}
-        ${cell('вакансій', r.vac||'—')}
-        ${cell('позаштатних', r.poza||'—')}
-        ${cell('за списком', r.spysok)}
-        ${cell('відсутніх', r.absent||'—', r.absent?'warn':'')}
-        ${cell('в наявності', r.nayav)}
-        ${cell('укомпл.', pct(r.shtatni, r.shtat))}
-      </div></div>`;
-  $('gRep').innerHTML = rows.map(card).join('') + `<div class="rcard tot">
-      <div class="rh">Разом</div>
-      <div class="rg">${cell('за штатом', t.shtat)}${cell('штатних', t.shtatni)}
-      ${cell('за списком', t.spysok)}${cell('в наявності', t.nayav)}
-      ${cell('укомпл.', pct(t.shtatni, t.shtat))}</div></div>`;
-}
 function renderReport(){
-  const rows = reportRows(), t = reportTotals();
+  const rx = makeMatcher($('rSearch').value);
+  const all = reportRows();
+  const rows = rx ? all.filter(r=>searchHit(rx, r.unit)) : all;
+  const t = sumRows(rows);
   $('gRep').classList.toggle('mob', MOB());
   $('repNote').textContent = repNoteText();
-  if(MOB()){
-    if(!rows.length){ $('gRep').innerHTML = '<div class="empty">Немає даних</div>'; }
-    else renderReportMob(rows, t);
-    return;
-  }
-  const head = ['Підрозділ','За штатом','Штатних','Вакансій',
-    'Позаштатних','За списком','Відсутніх','В наявності','Укомпл.'];
-  const out = [head.map((h,i)=>`<div class="c h${i?' rt':''}">${h}</div>`).join('')];
-  const cells = r => `<div class="c rt num">${r.shtat}</div><div class="c rt num">${r.shtatni}</div>
-    <div class="c rt num">${r.vac||'—'}</div><div class="c rt num">${r.poza||'—'}</div>
-    <div class="c rt num">${r.spysok}</div><div class="c rt num">${r.absent||'—'}</div>
-    <div class="c rt num">${r.nayav}</div><div class="c rt num">${pct(r.shtatni,r.shtat)}</div>`;
+  const cols = repCols();
+  const out = [cols.map(([h],i)=>`<div class="c h${i?' rt':''}">${h}</div>`).join('')];
+  // Нуль показуємо там, де він щось означає; у похідних колонках — прочерк.
+  const ZERO = new Set(['shtat','shtatni','spysok','nayav']);
+  const cells = r => cols.slice(1).map(([, k]) => '<div class="c rt num">'
+    + (k ? (r[k] || (ZERO.has(k) ? 0 : '—')) : pct(r.shtatni, r.shtat)) + '</div>').join('');
 
   if(!rows.length){
     $('gRep').innerHTML = out.join('') + '<div class="empty">Немає даних за цією штаткою</div>';
-} else {
+  } else {
     for(const r of rows)
-      out.push(`<div class="row"><div class="c"><span class="t">${esc(r.unit)}</span></div>${cells(r)}</div>`);
+      out.push(`<div class="row"><div class="c"><span class="t">${hl(r.unit, rx)}</span></div>${cells(r)}</div>`);
     out.push(`<div class="row tot"><div class="c">Разом</div>${cells(t)}</div>`);
     $('gRep').innerHTML = out.join('');
   }
-  $('repNote').textContent = repNoteText();
 }
 
 /* ================= ВИБУЛІ / ЖУРНАЛ ================= */
@@ -1855,7 +2095,6 @@ function renderLog(){
 
 function renderAll(){
   hideTip();
-  $('nC').textContent = allEntries().length;
   $('nD').textContent = dismissed().length || '';
   if(TAB==='c'||TAB==='r') renderSum();
   if(TAB==='c') renderMain();
@@ -1877,13 +2116,10 @@ const rowKey = e => e.person ? e.person.id : 'p:'+e.post.id;
 function paintSel(){
   const rows = [...$('gMain').querySelectorAll('.row[data-k]')];
   for(const el of rows) el.classList.toggle('sel', SEL.has(el.dataset.k));
-  const all = ORDER.length && SEL.size === ORDER.length;
-  for(const hb of $('gMain').querySelectorAll('.c.h.selall')){
-    hb.classList.toggle('on', !!all);
-    hb.classList.toggle('some', !all && SEL.size > 0);
-  }
   const mb = $('massBtn');
   if(mb) mb.disabled = SEL.size === 0;
+  const fb = $('fabs');
+  if(fb) fb.hidden = !MOB() || TAB !== 'c';
   const note = $('selNote');
   note.hidden = SEL.size === 0;
   note.textContent = SEL.size ? `виділено ${SEL.size}` : '';
@@ -1922,11 +2158,11 @@ function initSelection(){
   const g = $('gMain');
   g.addEventListener('mousedown', ev=>{
     if(ev.button!==0) return;
-    // Виділяє виключно клітинка зі знаком розрізнення — більше ніщо в рядку.
-    const cell = ev.target.closest('.selcell');
-    if(!cell) return;
-    const row = cell.closest('.row[data-i]');
-    if(!row) return;                      // це заголовок — його обробляє toggleAll
+    /* Виділяє порожнє місце рядка. Усе, що саме щось робить — прізвище,
+       номер, лійка, кнопки — лишається собою. */
+    if(ev.target.closest('a,button,input,select,textarea,.lnk,.unitband,.c.h')) return;
+    const row = ev.target.closest('.row[data-i]');
+    if(!row) return;
     ev.preventDefault();
     const i = +row.dataset.i, k = row.dataset.k;
     if(ev.shiftKey && anchor>=0){         // Shift дотягує діапазон від якоря
@@ -1940,8 +2176,9 @@ function initSelection(){
     dragBase = new Set(SEL);
     paintOn = !SEL.has(k);
     anchor = i;
-    dragging = true;
-    for(const x of mainGrids()) x.classList.add('painting');
+    // На сенсорі протяжка забирає прокрутку й системні жести — там лише дотик.
+    dragging = !MOB();
+    if(dragging) for(const x of mainGrids()) x.classList.add('painting');
     applyPaint(i);
   });
   g.addEventListener('mouseover', ev=>{
@@ -2331,10 +2568,7 @@ function openFilter(ev, k){
   if(fKey===k && !pop.hidden){ closeFilter(); return; }
   fKey = k;
   pop.innerHTML = COLS.find(c=>c.k===k).kind==='text' ? textFilterHtml(k) : enumFilterHtml(k);
-  pop.hidden = false;
-  const r = ev.currentTarget.getBoundingClientRect();
-  pop.style.left = Math.max(6, Math.min(r.left, innerWidth-260))+'px';
-  pop.style.top = Math.min(r.bottom+4, innerHeight-100)+'px';
+  placePop(pop, ev.currentTarget);
   const inp = pop.querySelector('input[type=text]');
   if(inp) setTimeout(()=>inp.focus(), 20);
 }
@@ -2810,7 +3044,7 @@ async function resetRun(e){
   try{
     const r = await api('reset', {method:'POST', body:JSON.stringify(body)});
     dlgReset.close();
-    LOGS=[]; SHEET=null; localStorage.removeItem('sheet');
+    LOGS=[]; SHEET=null;
     await reload();
     if(TAB==='l') loadLog();
     toast('Скинуто — ' + (Object.entries(r).map(([k,v])=>`${k}: ${v}`).join(', ') || 'нічого не було'));
@@ -2898,12 +3132,203 @@ async function exportXlsx(){
   }catch(err){ toast(err.message, true); }
 }
 
+/* ================= НИЖНЯ ПАНЕЛЬ ТЕЛЕФОНА =================
+   Вузли не дублюються: ті самі пошук, перемикач штаток і вкладки переїжджають
+   у нижній острівець і повертаються назад, коли екран знову широкий. */
+const dockHome = new Map();
+// У кожного екрана свій пошук; у звіті його немає.
+const SEARCH_OF = {c:'fSearch', r:'rSearch', d:'dSearch', l:'lSearch'};
+function remember(el){
+  if(el && !dockHome.has(el)) dockHome.set(el, {p: el.parentNode, n: el.nextSibling});
+  return el;
+}
+function goHome(el){
+  const h = dockHome.get(el);
+  if(h) h.p.insertBefore(el, h.n && h.n.parentNode === h.p ? h.n : null);
+}
+function layoutDock(){
+  const dock = $('dock');
+  const seg = remember($('sheetSeg'));
+  const tabs = remember(document.querySelector('.tabs'));
+  const mine = SEARCH_OF[TAB];
+  for(const id of Object.values(SEARCH_OF)){
+    const box = remember($(id).closest('.search'));
+    if(MOB() && id === mine) dock.appendChild(box);
+    else if(box.parentNode === dock) goHome(box);
+  }
+  if(MOB()){
+    dock.appendChild(seg); dock.appendChild(tabs);   // порядок згори вниз
+    dock.hidden = false;
+    $('dockveil').hidden = false;
+  }else{
+    goHome(seg); goHome(tabs);
+    dock.hidden = true;
+    $('dockveil').hidden = true;
+  }
+  // Кнопки пошуку немає там, де нема чого шукати.
+  measureChrome();
+}
+
+/* Дії, які на комп'ютері стоять у смузі над таблицею, тут збираються в один
+   список знизу: тягтися до верху екрана однією рукою незручно. */
+function sheetItems(){
+  const n = SEL.size;
+  return [
+    {t:`Виділити всі показані (${ORDER.length})`, i:'users', f:'selectAllRows()'},
+    n ? {t:`Зняти виділення (${n})`, i:'off', f:'clearSel()'} : null,
+    n ? {t:'Відсутність для виділених', i:'cal', f:'openMass()'} : null,
+    {t:'Перейменувати штатку', i:'edit', f:'renameSheet()'},
+    {t:'Поділитися', i:'share', f:'openOut()'},
+    {t:'Імпорт таблиці', i:'import', f:'openImport()'},
+    {t:'Скинути дані', i:'trash', f:'openReset()', danger:true},
+    {t:'Вийти', i:'out', f:'logout()'},
+  ].filter(Boolean);
+}
+/* Відкриває й закриває та сама кнопка: меню стоїть над нею, а не поверх,
+   тож повертатися назад можна там само, де щойно натиснув. */
+function toggleSheetMenu(ev){
+  if(ev) ev.stopPropagation();
+  $('sheetMenu').hidden ? openSheetMenu() : closeSheetMenu();
+}
+function openSheetMenu(){
+  $('sheetActions').innerHTML = sheetItems().map(x=>
+    `<button class="mi${x.danger?' danger':''}"
+      onclick="closeSheetMenu();${x.f}">${icon(x.i)}${esc(x.t)}</button>`).join('');
+  $('sheetMenu').hidden = false;
+  // Рахуємо від самого стосу кнопок: підібрана константа розходилася з ним
+  // щоразу, коли мінялася висота острівця чи кнопок.
+  const st = $('fabs').getBoundingClientRect();
+  $('sheetActions').style.bottom = Math.round(innerHeight - st.top + 12) + 'px';
+  $('moreBtn').setAttribute('aria-expanded', 'true');
+  $('moreBtn').classList.add('on');
+}
+function closeSheetMenu(ev){
+  if(ev && ev.target !== $('sheetMenu')) return;   // клік усередині меню не закриває
+  $('sheetMenu').hidden = true;
+  $('moreBtn').setAttribute('aria-expanded', 'false');
+  $('moreBtn').classList.remove('on');
+}
+/* Розмітка сусідньої штатки без зміни поточного стану: ORDER і RMAP описують
+   те, що зараз на екрані, тож на час побудови підміняємо їх і повертаємо. */
+function sheetHtml(sheet){
+  const [s0, o0, m0] = [SHEET, ORDER, RMAP];
+  SHEET = sheet; ORDER = []; RMAP = new Map();
+  const html = blocksOf(buildGroups()).map(b => tableHtml(b, false)).join('');
+  SHEET = s0; ORDER = o0; RMAP = m0;
+  return html;
+}
+// Повзунок між двома кнопками: t=0 — на поточній, t=1 — на сусідній.
+function indBetween(from, to, t){
+  const seg = $('sheetSeg');
+  if(!seg) return;
+  const ind = seg.querySelector('.ind'), bs = [...seg.querySelectorAll('button')];
+  const a = bs[from], b = bs[to];
+  if(!ind || !a || !b) return;
+  if(t === null){
+    /* Кінець жесту: вертаємо анімацію і ставимо повзунок під активну штатку.
+       Без цього після скасованого свайпу він застигав між двома кнопками —
+       і виглядало, наче обрані обидві. */
+    ind.style.transition = '';
+    moveInd();
+    return;
+  }
+  ind.style.transition = 'none';
+  ind.style.width = (a.offsetWidth + (b.offsetWidth - a.offsetWidth) * t) + 'px';
+  ind.style.transform =
+    `translateX(${a.offsetLeft + (b.offsetLeft - a.offsetLeft) * t}px)`;
+  ind.style.opacity = '1';
+}
+/* Жест веде обидва екрани за пальцем. Напрямок визначаємо на перших пікселях:
+   якщо рух радше вертикальний — віддаємо його прокрутці й більше не втручаємось. */
+function initSwipe(){
+  const wrap = $('gMain').closest('.wrap');
+  const peek = $('gPeek');
+  let x0 = 0, y0 = 0, w = 0, dir = 0, from = 0, to = 0, mode = '';
+
+  const reset = () => {
+    indBetween(from, from, null);        // повзунок завжди під активною штаткою
+    $('gMain').style.transform = '';
+    peek.hidden = true; peek.style.transform = ''; peek.innerHTML = '';
+    wrap.classList.remove('swiping');
+    wrap.style.minHeight = '';
+    mode = '';
+  };
+  const begin = dx => {
+    const sh = sheets();
+    if(sh.length < 2) return false;
+    dir = dx < 0 ? 1 : -1;
+    from = sh.indexOf(SHEET);
+    to = from + dir;
+    // Крайні штатки — межа списку, а не кільце: по колу неможливо зрозуміти,
+    // де ти зараз, і той самий рух приводив то туди, то назад.
+    if(to < 0 || to >= sh.length) return false;
+    w = wrap.offsetWidth || innerWidth;
+    wrap.style.minHeight = wrap.offsetHeight + 'px';
+    peek.innerHTML = sheetHtml(sh[to]);
+    peek.hidden = false;
+    wrap.classList.add('swiping');
+    return true;
+  };
+
+  wrap.addEventListener('touchstart', e=>{
+    if(e.touches.length !== 1){ mode = 'off'; return; }
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; mode = '';
+  }, {passive:true});
+
+  wrap.addEventListener('touchmove', e=>{
+    if(mode === 'off' || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - x0, dy = e.touches[0].clientY - y0;
+    if(!mode){
+      if(Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+      if(Math.abs(dx) < Math.abs(dy) * 1.2 || !begin(dx)){ mode = 'off'; return; }
+      mode = 'x';
+    }
+    e.preventDefault();                     // жест наш — прокрутку не віддаємо
+    // Опір біля межі: далі за ширину екрана тягнути нема куди.
+    const shift = Math.max(-w, Math.min(w, dx));
+    $('gMain').style.transform = `translateX(${shift}px)`;
+    peek.style.transform = `translateX(${shift + dir * w}px)`;
+    indBetween(from, to, Math.min(1, Math.abs(shift) / w));
+  }, {passive:false});
+
+  const finish = e => {
+    if(mode !== 'x'){ mode = ''; return; }
+    const dx = (e.changedTouches ? e.changedTouches[0].clientX : x0) - x0;
+    const go = Math.abs(dx) > Math.min(90, w * 0.28);
+    const sh = sheets();
+    const ms = REDUCED() ? 0 : 190;
+    const ease = `transform ${ms}ms cubic-bezier(.2,.7,.3,1)`;
+    // Доїжджаємо: поточний іде за край, сусідній стає на місце. Не доїжджаємо —
+    // обидва повертаються туди, звідки почали.
+    $('gMain').style.transition = ease;
+    peek.style.transition = ease;
+    $('gMain').style.transform = `translateX(${go ? -dir * w : 0}px)`;
+    peek.style.transform = `translateX(${go ? 0 : dir * w}px)`;
+    indBetween(from, go ? to : from, 1);
+    setTimeout(()=>{
+      $('gMain').style.transition = ''; peek.style.transition = '';
+      if(go) setSheet(sh[to]);
+      reset();
+    }, ms + 10);
+  };
+  wrap.addEventListener('touchend', finish, {passive:true});
+  wrap.addEventListener('touchcancel', ()=>{ if(mode==='x') reset(); mode=''; },
+    {passive:true});
+}
+/* Штатка міняється одразу, а список в'їжджає з боку свайпу. Робити навпаки —
+   чекати кінця анімації — не можна: якщо її скасують чи вимкнуть, перемикання
+   просто не станеться. */
+
+function selectAllRows(){ for(const k of ORDER) SEL.add(k); anchor = 0; paintSel(); }
+
 /* ================= СТАРТ ================= */
 document.documentElement.style.setProperty('--dh', hueOf([...DIRS][0]));
 try{ Object.assign(SOPT, JSON.parse(localStorage.getItem('sopt')||'{}')); }catch(_){}
 $('soCase').checked=SOPT.case; $('soWord').checked=SOPT.word; $('soRe').checked=SOPT.re;
 setSopt();
 initSelection();
+layoutDock();
+initSwipe();
 applyOffline();
 chromeRO.observe(document.querySelector('header'));
 for(const b of document.querySelectorAll('.bar')) chromeRO.observe(b);

@@ -1150,6 +1150,10 @@ func main() {
 		runPhones(context.Background(), os.Args[i+1], indexOf(os.Args, "-apply") > 0)
 		return
 	}
+	if i := indexOf(os.Args, "-units"); i > 0 && i+1 < len(os.Args) {
+		runUnits(context.Background(), os.Args[i+1], indexOf(os.Args, "-apply") > 0)
+		return
+	}
 
 	mux := http.NewServeMux()
 	api := http.NewServeMux()

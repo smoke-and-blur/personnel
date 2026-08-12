@@ -644,16 +644,20 @@ type importResult struct {
 
 func normPIB(s string) string { return strings.ToUpper(strings.Join(strings.Fields(s), " ")) }
 
-// Слот однозначно визначається трійкою штатка+підрозділ+посада: однакова посада
-// у двох різних штатках — це дві різні посади.
-func slotKey(sheet, unit, position string) string { return sheet + "\x00" + unit + "\x00" + position }
+// Слот однозначно визначається четвіркою штатка+підрозділ+посада+напрям.
+// Напрям тут не зайвий: та сама посада в одному підрозділі буває і за FPV,
+// і за «Бомбером» — це різні штатні одиниці. Без нього вони зливались в одну
+// пару, і кожна діставала мітку першого рядка у файлі.
+func slotKey(sheet, unit, position, tag string) string {
+	return sheet + "\x00" + unit + "\x00" + position + "\x00" + tag
+}
 
-func splitSlotKey(k string) (sheet, unit, position string) {
-	parts := strings.SplitN(k, "\x00", 3)
-	for len(parts) < 3 {
+func splitSlotKey(k string) (sheet, unit, position, tag string) {
+	parts := strings.SplitN(k, "\x00", 4)
+	for len(parts) < 4 {
 		parts = append(parts, "")
 	}
-	return parts[0], parts[1], parts[2]
+	return parts[0], parts[1], parts[2], parts[3]
 }
 
 // Чистка пробілів і відсів непридатних рядків.
@@ -688,7 +692,7 @@ func planSlots(rows []importRow) (keys []string, need map[string]int, tagFor map
 		if row.Extra {
 			continue
 		}
-		k := slotKey(row.Sheet, row.Unit, row.Position)
+		k := slotKey(row.Sheet, row.Unit, row.Position, row.Tag)
 		if _, ok := need[k]; !ok {
 			keys = append(keys, k)
 		}
@@ -753,8 +757,15 @@ func importData(w http.ResponseWriter, r *http.Request) {
 	// 2) Довести кількість посад до потрібної.
 	slots := map[string][]Post{}
 	for _, k := range keyOrder {
-		sheet, unit, position := splitSlotKey(k)
-		c, err := posts.Find(ctx, bson.M{"sheet": sheet, "unit": unit, "position": position},
+		sheet, unit, position, tag := splitSlotKey(k)
+		// Посади без мітки теж підходять — нижче їм проставлять мітку з файлу.
+		filter := bson.M{"sheet": sheet, "unit": unit, "position": position}
+		if tag != "" {
+			filter["tag"] = bson.M{"$in": []string{tag, ""}}
+		} else {
+			filter["tag"] = ""
+		}
+		c, err := posts.Find(ctx, filter,
 			options.Find().SetSort(bson.D{{Key: "order", Value: 1}}))
 		if err != nil {
 			writeErr(w, 500, err.Error())
@@ -813,7 +824,7 @@ func importData(w http.ResponseWriter, r *http.Request) {
 		if row.Extra {
 			p.Unit, p.Position = row.Unit, row.Position
 		} else {
-			k := slotKey(row.Sheet, row.Unit, row.Position)
+			k := slotKey(row.Sheet, row.Unit, row.Position, row.Tag)
 			var target *Post
 			for i := range slots[k] {
 				if !occupied[slots[k][i].ID.Hex()] {
@@ -1152,6 +1163,14 @@ func main() {
 	}
 	if i := indexOf(os.Args, "-units"); i > 0 && i+1 < len(os.Args) {
 		runUnits(context.Background(), os.Args[i+1], indexOf(os.Args, "-apply") > 0)
+		return
+	}
+	if i := indexOf(os.Args, "-positions"); i > 0 && i+1 < len(os.Args) {
+		runPositions(context.Background(), os.Args[i+1], indexOf(os.Args, "-apply") > 0)
+		return
+	}
+	if i := indexOf(os.Args, "-dump"); i > 0 && i+1 < len(os.Args) {
+		runDump(context.Background(), os.Args[i+1])
 		return
 	}
 

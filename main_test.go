@@ -42,20 +42,20 @@ func TestPlanSlotsCountsRepeatedPositions(t *testing.T) {
 		t.Fatalf("пар (підрозділ+посада) = %d, очікували 2: %v", len(keys), keys)
 	}
 	// Порядок появи у файлі має зберігатись — від нього залежить order у штатці.
-	if got := keys[0]; got != slotKey("Бойові", "1 взвод", "начальник відділення") {
+	if got := keys[0]; got != slotKey("Бойові", "1 взвод", "начальник відділення", "МРТ") {
 		t.Errorf("перша пара = %q", strings.ReplaceAll(got, "\x00", " / "))
 	}
 	// Три рядки «оператор FPV» = три окремі слоти, а не один.
-	if n := need[slotKey("Бойові", "1 взвод", "оператор FPV")]; n != 3 {
+	if n := need[slotKey("Бойові", "1 взвод", "оператор FPV", "FPV")]; n != 3 {
 		t.Errorf("слотів на «оператор FPV» = %d, очікували 3", n)
 	}
-	if n := need[slotKey("Бойові", "1 взвод", "начальник відділення")]; n != 1 {
+	if n := need[slotKey("Бойові", "1 взвод", "начальник відділення", "МРТ")]; n != 1 {
 		t.Errorf("слотів на «начальник відділення» = %d, очікували 1", n)
 	}
-	if tg := tagFor[slotKey("Бойові", "1 взвод", "оператор FPV")]; tg != "FPV" {
+	if tg := tagFor[slotKey("Бойові", "1 взвод", "оператор FPV", "FPV")]; tg != "FPV" {
 		t.Errorf("мітка = %q, очікували FPV", tg)
 	}
-	if _, ok := need[slotKey("Бойові", "1 взвод", "водій")]; ok {
+	if _, ok := need[slotKey("Бойові", "1 взвод", "водій", "")]; ok {
 		t.Error("позаштатний рядок не має створювати посаду")
 	}
 }
@@ -71,7 +71,7 @@ func TestPlanSlotsSeparatesSheets(t *testing.T) {
 		t.Fatalf("ключів = %d, очікували 2", len(keys))
 	}
 	for _, sh := range []string{"Бойові", "Охорона кордону"} {
-		if n := need[slotKey(sh, "1 взвод", "оператор")]; n != 1 {
+		if n := need[slotKey(sh, "1 взвод", "оператор", "МРТ")]; n != 1 {
 			t.Errorf("штатка %q: слотів = %d, очікували 1", sh, n)
 		}
 	}
@@ -105,18 +105,48 @@ func TestNormPIB(t *testing.T) {
 
 func TestSlotKeyIsUnambiguous(t *testing.T) {
 	// Склейка не повинна плутати різні трійки з однаковим конкатенатом.
-	if slotKey("", "а", "бв") == slotKey("", "аб", "в") {
+	if slotKey("", "а", "бв", "") == slotKey("", "аб", "в", "") {
 		t.Error("ключі різних пар збіглися")
 	}
-	if slotKey("а", "б", "в") == slotKey("", "аб", "в") {
+	if slotKey("а", "б", "в", "") == slotKey("", "аб", "в", "") {
 		t.Error("штатка не відокремлена від підрозділу")
 	}
-	sheet, unit, position := splitSlotKey(slotKey("Бойові", "1 взвод", "оператор FPV"))
-	if sheet != "Бойові" || unit != "1 взвод" || position != "оператор FPV" {
-		t.Errorf("розбір ключа: %q / %q / %q", sheet, unit, position)
+	// Напрям — частина ключа: та сама посада за FPV і за «Бомбером» це різні
+	// штатні одиниці, інакше вони зіллються в одну й напрям загубиться.
+	if slotKey("Ш", "п", "оператор", "FPV") == slotKey("Ш", "п", "оператор", "Бомбер") {
+		t.Error("напрям не входить у ключ")
 	}
-	// Порожня штатка теж має коректно розбиратись.
-	if s, u, p := splitSlotKey(slotKey("", "2 взвод", "сапер")); s != "" || u != "2 взвод" || p != "сапер" {
-		t.Errorf("розбір без штатки: %q / %q / %q", s, u, p)
+	sheet, unit, position, tag := splitSlotKey(
+		slotKey("Бойові", "1 взвод", "оператор FPV", "FPV"))
+	if sheet != "Бойові" || unit != "1 взвод" || position != "оператор FPV" || tag != "FPV" {
+		t.Errorf("розбір ключа: %q / %q / %q / %q", sheet, unit, position, tag)
+	}
+	// Порожня штатка і порожній напрям теж мають коректно розбиратись.
+	if s, u, p, g := splitSlotKey(slotKey("", "2 взвод", "сапер", "")); s != "" ||
+		u != "2 взвод" || p != "сапер" || g != "" {
+		t.Errorf("розбір без штатки: %q / %q / %q / %q", s, u, p, g)
+	}
+}
+
+// Одна посада в одному підрозділі, але за різними напрямами — це різні слоти.
+// Раніше вони зливались, і всі копії діставали мітку першого рядка.
+func TestPlanSlotsSplitsByTag(t *testing.T) {
+	rows, _ := normalizeImportRows([]importRow{
+		{Sheet: "Ш", Unit: "гр", Position: "оператор", Tag: "FPV", PIB: "А А А"},
+		{Sheet: "Ш", Unit: "гр", Position: "оператор", Tag: "Бомбер", PIB: "Б Б Б"},
+		{Sheet: "Ш", Unit: "гр", Position: "оператор", Tag: "FPV", PIB: "В В В"},
+	})
+	keys, need, tagFor := planSlots(rows)
+	if len(keys) != 2 {
+		t.Fatalf("слотів = %d, очікували 2 (FPV і Бомбер)", len(keys))
+	}
+	if n := need[slotKey("Ш", "гр", "оператор", "FPV")]; n != 2 {
+		t.Errorf("FPV: %d, очікували 2", n)
+	}
+	if n := need[slotKey("Ш", "гр", "оператор", "Бомбер")]; n != 1 {
+		t.Errorf("Бомбер: %d, очікували 1", n)
+	}
+	if tg := tagFor[slotKey("Ш", "гр", "оператор", "Бомбер")]; tg != "Бомбер" {
+		t.Errorf("мітка = %q, очікували Бомбер", tg)
 	}
 }

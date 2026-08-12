@@ -1,6 +1,9 @@
 # --- реальні дані підрозділів (ніколи не в репозиторій) ---
 podilsk.tsv
 units.tsv
+positions.tsv
+рубак.csv
+pos.txt
 *ІДМ*
 *.xlsx
 !sample_*.xlsx

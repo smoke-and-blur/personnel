@@ -298,7 +298,34 @@ func runPhones(ctx context.Context, path string, apply bool) {
 //
 // Файл: дві колонки через табуляцію — стара назва і нова. Тримаємо його поза
 // репозиторієм: справжні назви підрозділів там зберігати не можна.
+// Перелік наявних значень поля — щоб було з чого будувати карту скорочень.
+func runDump(ctx context.Context, field string) {
+	vals, err := posts.Distinct(ctx, field, bson.M{})
+	if err != nil {
+		fatalf("%v", err)
+	}
+	out := make([]string, 0, len(vals))
+	for _, v := range vals {
+		if str, ok := v.(string); ok && str != "" {
+			out = append(out, str)
+		}
+	}
+	sort.Strings(out)
+	for _, v := range out {
+		fmt.Println(v)
+	}
+	fmt.Fprintf(os.Stderr, "усього: %d\n", len(out))
+}
+
 func runUnits(ctx context.Context, path string, apply bool) {
+	runRename(ctx, "unit", path, apply)
+}
+
+func runPositions(ctx context.Context, path string, apply bool) {
+	runRename(ctx, "position", path, apply)
+}
+
+func runRename(ctx context.Context, field, path string, apply bool) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		fatalf("не вдалося прочитати %s: %v", path, err)
@@ -329,12 +356,12 @@ func runUnits(ctx context.Context, path string, apply bool) {
 	}
 	var out []plan
 	for from, to := range ren {
-		np, err := posts.CountDocuments(ctx, bson.M{"unit": from})
+		np, err := posts.CountDocuments(ctx, bson.M{field: from})
 		if err != nil {
 			fatalf("%v", err)
 		}
 		// У штатних unit — копія з посади, у позаштатних — власне поле.
-		nu, err := persons.CountDocuments(ctx, bson.M{"unit": from})
+		nu, err := persons.CountDocuments(ctx, bson.M{field: from})
 		if err != nil {
 			fatalf("%v", err)
 		}
@@ -355,17 +382,17 @@ func runUnits(ctx context.Context, path string, apply bool) {
 	}
 	now := time.Now().UTC()
 	for _, p := range out {
-		if _, err := posts.UpdateMany(ctx, bson.M{"unit": p.from},
-			bson.M{"$set": bson.M{"unit": p.to}}); err != nil {
+		if _, err := posts.UpdateMany(ctx, bson.M{field: p.from},
+			bson.M{"$set": bson.M{field: p.to}}); err != nil {
 			fmt.Printf("  %s: %v\n", p.from, err)
 			continue
 		}
-		if _, err := persons.UpdateMany(ctx, bson.M{"unit": p.from},
-			bson.M{"$set": bson.M{"unit": p.to, "updatedAt": now}}); err != nil {
+		if _, err := persons.UpdateMany(ctx, bson.M{field: p.from},
+			bson.M{"$set": bson.M{field: p.to, "updatedAt": now}}); err != nil {
 			fmt.Printf("  %s: %v\n", p.from, err)
 		}
 	}
-	addLog(ctx, "", "—", "Підрозділи", fmt.Sprintf("перейменовано назв: %d", len(out)))
+	addLog(ctx, "", "—", "Перейменування", fmt.Sprintf("поле %s, назв: %d", field, len(out)))
 	fmt.Printf("перейменовано: %d\n", len(out))
 }
 
